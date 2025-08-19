@@ -1,0 +1,46 @@
+{
+  "name": "@repo/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./schema": "./schema/index.ts",
+    "./schema/*": "./schema/*"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "generate:staging": "bun --env ENVIRONMENT=staging drizzle-kit generate",
+    "generate:prod": "bun --env ENVIRONMENT=prod drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "migrate:staging": "bun --env ENVIRONMENT=staging drizzle-kit migrate",
+    "migrate:prod": "bun --env ENVIRONMENT=prod drizzle-kit migrate",
+    "push": "drizzle-kit push",
+    "push:staging": "bun --env ENVIRONMENT=staging drizzle-kit push",
+    "push:prod": "bun --env ENVIRONMENT=prod drizzle-kit push",
+    "studio": "drizzle-kit studio",
+    "studio:staging": "bun --env ENVIRONMENT=staging drizzle-kit studio",
+    "studio:prod": "bun --env ENVIRONMENT=prod drizzle-kit studio",
+    "seed": "bun scripts/seed.ts",
+    "seed:staging": "bun --env ENVIRONMENT=staging scripts/seed.ts",
+    "seed:prod": "bun --env ENVIRONMENT=prod scripts/seed.ts",
+    "export": "bun scripts/export.ts",
+    "export:staging": "bun --env ENVIRONMENT=staging scripts/export.ts",
+    "export:prod": "bun --env ENVIRONMENT=prod scripts/export.ts",
+    "introspect": "drizzle-kit introspect",
+    "up": "drizzle-kit up",
+    "check": "drizzle-kit check",
+    "drop": "drizzle-kit drop"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.44.4"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/bun": "^1.2.19",
+    "dotenv": "^17.2.1",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.4",
+    "typescript": "~5.9.2"
+  }
+}

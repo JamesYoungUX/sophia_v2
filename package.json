@@ -1,0 +1,100 @@
+{
+  "name": "@repo/root",
+  "version": "0.0.0",
+  "packageManager": "bun@1.2.19",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "db",
+    "packages/*",
+    "scripts"
+  ],
+  "scripts": {
+    "dev": "bun --filter @repo/web dev",
+    "lint": "eslint --cache --report-unused-disable-directives .",
+    "test": "vitest",
+    "typecheck": "tsc --build",
+    "build:types": "tsc --build",
+    "build": "bun --filter @repo/web --filter @repo/api --filter @repo/edge build",
+    "build:api": "docker build --tag api:latest -f ./apps/api/Dockerfile .",
+    "generate:types": "bun wrangler types --config apps/edge/wrangler.jsonc --include-runtime=false apps/edge/types/cloudflare-env.d.ts && bun prettier --write apps/edge/types/*-env.d.ts",
+    "prepare": "husky",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:deploy": "gh-pages --dist docs/.vitepress/dist",
+    "dev:web": "bun --filter @repo/web dev",
+    "dev:api": "bun --filter @repo/api dev",
+    "dev:edge": "bun --filter @repo/edge dev",
+    "build:web": "bun --filter @repo/web build",
+    "build:edge": "bun --filter @repo/edge build",
+    "test:web": "bun --filter @repo/web test",
+    "test:api": "bun --filter @repo/api test",
+    "test:edge": "bun --filter @repo/edge test",
+    "ui:add": "bun --filter @repo/ui ui:add",
+    "ui:list": "bun --filter @repo/ui ui:list",
+    "ui:update": "bun --filter @repo/ui ui:update",
+    "ui:essentials": "bun --filter @repo/ui ui:essentials"
+  },
+  "devDependencies": {
+    "@emotion/babel-plugin": "^11.13.5",
+    "@emotion/eslint-plugin": "^11.12.0",
+    "@eslint-react/eslint-plugin": "^1.52.3",
+    "@eslint/js": "^9.33.0",
+    "@types/eslint": "^9.6.1",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "gh-pages": "^6.3.0",
+    "globals": "^16.3.0",
+    "graphql": "^16.11.0",
+    "happy-dom": "^18.0.1",
+    "husky": "^9.1.7",
+    "jiti": "^2.5.1",
+    "mermaid": "^11.9.0",
+    "npm-check": "^6.0.1",
+    "prettier": "^3.6.2",
+    "react": "^19.1.1",
+    "relay-config": "^12.0.1",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.39.0",
+    "typescript-language-server": "^4.4.0",
+    "vite": "~7.1.1",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17",
+    "vitest": "~3.2.4",
+    "wrangler": "^4.28.1"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": false,
+    "quoteProps": "as-needed",
+    "jsxSingleQuote": false,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "always",
+    "endOfLine": "lf",
+    "overrides": [
+      {
+        "files": "*.jsonc",
+        "options": {
+          "trailingComma": "none"
+        }
+      }
+    ]
+  }
+}
