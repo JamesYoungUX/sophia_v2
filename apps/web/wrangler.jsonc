@@ -1,0 +1,42 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "example-web",
+  "compatibility_date": "2025-08-07",
+  "workers_dev": false,
+
+  // Static assets configuration
+  "assets": {
+    "directory": "./dist"
+  },
+
+  // Environment-specific configurations
+  "env": {
+    "production": {
+      "name": "example-web",
+      "routes": [
+        {
+          "pattern": "example.com/*",
+          "zone_name": "your_zone_name_here"
+        }
+      ]
+    },
+    "staging": {
+      "name": "example-web-staging",
+      "routes": [
+        {
+          "pattern": "staging.example.com/*",
+          "zone_name": "your_zone_name_here"
+        }
+      ]
+    },
+    "preview": {
+      "name": "example-web-preview",
+      "routes": [
+        {
+          "pattern": "preview.example.com/*",
+          "zone_name": "your_zone_name_here"
+        }
+      ]
+    }
+  }
+}
