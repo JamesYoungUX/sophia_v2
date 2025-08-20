@@ -19,6 +19,7 @@ export const patientRouter = router({
       const patients = await ctx.db
         .select({
           patId: patient.patId,
+          patMrnId: patient.patMrnId,
           firstName: patient.patFirstName,
           lastName: patient.patLastName,
           middleName: patient.patMiddleName,

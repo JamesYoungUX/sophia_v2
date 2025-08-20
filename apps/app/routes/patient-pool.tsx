@@ -14,9 +14,21 @@ import {
   TableRow,
 } from "@repo/ui/components/table";
 import { Badge } from "@repo/ui/components/badge";
+import { Button } from "@repo/ui/components/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@repo/ui/components/pagination";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuth } from "@/lib/auth-guard";
 import { api } from "@/lib/trpc";
+import { useState } from "react";
+import { Copy } from "lucide-react";
 
 // Helper function to calculate age from birth date
 function calculateAge(birthDate: Date | null): number {
@@ -56,6 +68,8 @@ function getRiskBadgeVariant(riskLevel: string) {
 
 function PatientPoolTable() {
   const { data: patients, isLoading, error } = api.patient.list.useQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   if (isLoading) {
     return (
@@ -88,6 +102,12 @@ function PatientPoolTable() {
   }
 
   const patientPoolData = patients || [];
+  
+  // Pagination calculations
+  const totalPages = Math.ceil(patientPoolData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageData = patientPoolData.slice(startIndex, endIndex);
 
   return (
     <Card>
@@ -100,6 +120,7 @@ function PatientPoolTable() {
             <TableRow>
               <TableHead>Patient ID</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>MRN</TableHead>
               <TableHead>Primary Condition</TableHead>
               <TableHead>Risk Level</TableHead>
               <TableHead>Last Visit</TableHead>
@@ -108,7 +129,7 @@ function PatientPoolTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {patientPoolData.map((patient) => {
+            {currentPageData.map((patient) => {
               const fullName = `${patient.lastName || ''}, ${patient.firstName || ''}`;
               const birthDate = patient.birthDate ? new Date(patient.birthDate) : null;
               const age = calculateAge(birthDate);
@@ -128,6 +149,24 @@ function PatientPoolTable() {
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm">{patient.patMrnId || 'N/A'}</span>
+                      {patient.patMrnId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => {
+                            navigator.clipboard.writeText(patient.patMrnId!);
+                          }}
+                          title="Copy MRN to clipboard"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>N/A</TableCell>
                   <TableCell>
                     <Badge variant={getRiskBadgeVariant("Low")}>
@@ -143,9 +182,74 @@ function PatientPoolTable() {
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter>
-        <div className="text-sm text-muted-foreground">
-          Showing {patientPoolData.length} patients in active pool
+      <CardFooter className="flex flex-col gap-4">
+        <div className="flex justify-between items-center w-full">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(endIndex, patientPoolData.length)} of {patientPoolData.length} patients
+          </div>
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) setCurrentPage(currentPage - 1);
+                    }}
+                    className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current
+                  const showPage = 
+                    page === 1 || 
+                    page === totalPages || 
+                    (page >= currentPage - 1 && page <= currentPage + 1);
+                  
+                  if (!showPage) {
+                    // Show ellipsis for gaps
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  }
+                  
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                    }}
+                    className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       </CardFooter>
     </Card>
