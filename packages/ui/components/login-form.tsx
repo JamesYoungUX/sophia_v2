@@ -4,7 +4,8 @@ import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { useState } from "react";
 
-interface LoginFormProps extends Omit<React.ComponentProps<"form">, "onSubmit"> {
+interface LoginFormProps
+  extends Omit<React.ComponentProps<"form">, "onSubmit"> {
   onLogin?: (data: { email: string; password: string }) => Promise<void> | void;
   onGoogleLogin?: () => Promise<void> | void;
   isLoading?: boolean;
@@ -24,7 +25,7 @@ export function LoginForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
@@ -38,7 +39,11 @@ export function LoginForm({
   };
 
   return (
-    <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      onSubmit={handleSubmit}
+      {...props}
+    >
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Login to your account</h1>
         <p className="text-muted-foreground text-sm text-balance">
@@ -53,13 +58,13 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="m@example.com" 
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required 
+            required
             disabled={isLoading}
           />
         </div>
@@ -73,12 +78,12 @@ export function LoginForm({
               Forgot your password?
             </a>
           </div>
-          <Input 
-            id="password" 
-            type="password" 
+          <Input
+            id="password"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required 
+            required
             disabled={isLoading}
           />
         </div>
@@ -90,14 +95,18 @@ export function LoginForm({
             Or continue with
           </span>
         </div>
-        <Button 
-          variant="outline" 
-          className="w-full" 
+        <Button
+          variant="outline"
+          className="w-full"
           type="button"
           onClick={onGoogleLogin}
           disabled={isLoading}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            className="w-4 h-4"
+          >
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
