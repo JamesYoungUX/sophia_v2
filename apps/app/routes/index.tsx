@@ -1,141 +1,94 @@
-/* SPDX-FileCopyrightText: 2014-present Kriasoft */
-/* SPDX-License-Identifier: MIT */
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui";
-import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Users, FileText, TrendingUp } from "lucide-react";
+import { StatsCard } from "@/components/stats-card";
+import { SurgicalTrackingChart } from "@/components/surgical-tracking-chart";
+import { auth } from "@/lib/auth";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: Dashboard,
-});
+  beforeLoad: async () => {
+    const session = await auth.getSession();
+    if (!session) {
+      throw redirect({
+        to: "/",
+      });
+    }
+  },
+  component: () => {
+    const { data: session } = auth.useSession();
+    const greeting = (() => {
+      const hour = new Date().getHours();
+      const firstName = session?.user?.name?.split(" ")[0];
+      const nameGreeting = firstName ? `, ${firstName}` : "";
+      
+      if (hour < 12)
+        return `Good morning${nameGreeting}!`;
+      if (hour < 18)
+        return `Good afternoon${nameGreeting}!`;
+      return `Good evening${nameGreeting}!`;
+    })();
 
-function Dashboard() {
-  const stats = [
-    {
-      title: "Total Users",
-      value: "1,234",
-      change: "+12%",
-      icon: Users,
-    },
-    {
-      title: "Active Sessions",
-      value: "89",
-      change: "+5%",
-      icon: Activity,
-    },
-    {
-      title: "Reports Generated",
-      value: "456",
-      change: "+23%",
-      icon: FileText,
-    },
-    {
-      title: "Growth Rate",
-      value: "18.2%",
-      change: "+2.1%",
-      icon: TrendingUp,
-    },
-  ];
-
-  return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Welcome back! Here's an overview of your application.
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">{stat.change}</span> from last
-                month
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest events in your application</CardDescription>
-          </CardHeader>
-          <CardContent>
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">
+        <div className="text-xl font-semibold text-muted-foreground mb-4">
+          {greeting}
+        </div>
+        <div className="grid gap-4 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 w-full">
+          <div className="rounded-xl bg-card p-6 shadow">
             <div className="space-y-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm">User action performed</p>
-                    <p className="text-xs text-muted-foreground">
-                      {i} hour{i > 1 ? "s" : ""} ago
-                    </p>
-                  </div>
-                </div>
-              ))}
+              <h3 className="font-semibold text-muted-foreground">
+                Priority Tasks
+              </h3>
+              <ul className="space-y-2">
+                {[
+                  { id: 1, title: "Review patient charts", priority: "high" },
+                  {
+                    id: 2,
+                    title: "Update treatment plans",
+                    priority: "medium",
+                  },
+                  { id: 3, title: "Schedule follow-ups", priority: "low" },
+                ].map((task) => (
+                  <li
+                    key={task.id}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-sm">{task.title}</span>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        task.priority === "high"
+                          ? "bg-red-100 text-red-800"
+                          : task.priority === "medium"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {task.priority}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and operations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                className="p-4 text-left border rounded-lg hover:bg-accent transition-colors"
-              >
-                <FileText className="h-5 w-5 mb-2" />
-                <p className="text-sm font-medium">Generate Report</p>
-              </button>
-              <button
-                type="button"
-                className="p-4 text-left border rounded-lg hover:bg-accent transition-colors"
-              >
-                <Users className="h-5 w-5 mb-2" />
-                <p className="text-sm font-medium">Manage Users</p>
-              </button>
-              <button
-                type="button"
-                className="p-4 text-left border rounded-lg hover:bg-accent transition-colors"
-              >
-                <Activity className="h-5 w-5 mb-2" />
-                <p className="text-sm font-medium">View Analytics</p>
-              </button>
-              <button
-                type="button"
-                className="p-4 text-left border rounded-lg hover:bg-accent transition-colors"
-              >
-                <TrendingUp className="h-5 w-5 mb-2" />
-                <p className="text-sm font-medium">Export Data</p>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <StatsCard
+            title="Preoperative Stats"
+            data={[
+              { name: "Completed", value: 42, color: "completed" },
+              { name: "Pending", value: 18, color: "pending" },
+              { name: "Cancelled", value: 5, color: "cancelled" },
+            ]}
+            total={65}
+          />
+          <StatsCard
+            title="Postoperative Stats"
+            data={[
+              { name: "Recovered", value: 38, color: "completed" },
+              { name: "In Recovery", value: 12, color: "pending" },
+              { name: "Complications", value: 3, color: "cancelled" },
+            ]}
+            total={53}
+          />
+        </div>
+        <SurgicalTrackingChart />
       </div>
-    </div>
-  );
-}
+    );
+  },
+});

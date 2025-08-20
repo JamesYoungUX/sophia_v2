@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2014-present Kriasoft */
 /* SPDX-License-Identifier: MIT */
 
-import { createStore, Provider } from "jotai";
+import { atom, createStore, Provider } from "jotai";
 import type { ReactNode } from "react";
 import { createElement } from "react";
 
@@ -18,3 +18,9 @@ export function StoreProvider(props: StoreProviderProps) {
 export type StoreProviderProps = {
   children: ReactNode;
 };
+
+/**
+ * Navigation state atoms
+ */
+export const openNavigationSectionAtom = atom<string | null>(null);
+export const consoleOpenAtom = atom<boolean>(true);
