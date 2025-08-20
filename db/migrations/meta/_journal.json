@@ -36,6 +36,13 @@
       "when": 1755722020036,
       "tag": "0004_add-final-patient-columns",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1755731810751,
+      "tag": "0005_add-care-exception",
+      "breakpoints": true
     }
   ]
 }

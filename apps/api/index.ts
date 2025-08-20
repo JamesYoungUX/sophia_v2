@@ -15,12 +15,14 @@ import { router } from "./lib/trpc.js";
 import { organizationRouter } from "./routers/organization.js";
 import { patientRouter } from "./routers/patient.js";
 import { userRouter } from "./routers/user.js";
+import { careExceptionRouter } from "./routers/care-exception.js";
 
 // tRPC API router
 const appRouter = router({
   user: userRouter,
   organization: organizationRouter,
   patient: patientRouter,
+  careException: careExceptionRouter,
 });
 
 // HTTP router

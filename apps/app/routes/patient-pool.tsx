@@ -214,7 +214,7 @@ function PatientPoolTable() {
                   <TableCell>
                     <Status status="online">
                       <StatusIndicator />
-                      <StatusLabel>ontrack</StatusLabel>
+                      <StatusLabel>On Track</StatusLabel>
                     </Status>
                   </TableCell>
                 </TableRow>
