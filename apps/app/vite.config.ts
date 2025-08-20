@@ -88,6 +88,11 @@ export default defineProject(({ mode }) => {
               : env.API_ORIGIN,
           changeOrigin: true,
         },
+        "/unsplash": {
+          target: "https://images.unsplash.com",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/unsplash/, ""),
+        },
       },
     },
 
