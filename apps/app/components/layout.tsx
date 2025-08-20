@@ -1,104 +1,94 @@
 /* SPDX-FileCopyrightText: 2014-present Kriasoft */
 /* SPDX-License-Identifier: MIT */
 
-import { Button } from "@repo/ui";
-import { Link } from "@tanstack/react-router";
+import { AppSidebar } from "@/components/app-sidebar";
+import { NavUser } from "@/components/nav-user";
 import {
-  Home,
-  Settings,
-  Users,
-  Activity,
-  FileText,
-  Menu,
-  X,
-} from "lucide-react";
-import { useState } from "react";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Separator,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@repo/ui";
+import { useLocation } from "@tanstack/react-router";
+import { StoreProvider } from "@/lib/store";
+
+const userData = {
+  name: "Dr. Sarah Johnson",
+  email: "sarah.johnson@sophia.health",
+  avatar: "/avatars/doctor.jpg",
+};
+
+// Three-level breadcrumb mapping: route -> { section, group, page }
+const routeToBreadcrumb: Record<string, { section: string; group: string; page: string }> = {
+  "/": { section: "Platform", group: "Console", page: "Overview" },
+  "/analytics": { section: "Platform", group: "Console", page: "Analytics" },
+  "/reports": { section: "Platform", group: "Console", page: "Reports" },
+  "/care-plans": { section: "Platform", group: "Plan Library", page: "Care Plans" },
+  "/clinical-support": { section: "Platform", group: "Plan Library", page: "Clinical Support" },
+  "/patients": { section: "Platform", group: "Plan Library", page: "Patient Records" },
+  "/appointments": { section: "Platform", group: "Plan Library", page: "Appointments" },
+  "/medical-records": { section: "Management", group: "Documentation", page: "Medical Records" },
+  "/treatment-plans": { section: "Management", group: "Documentation", page: "Treatment Plans" },
+  "/lab-results": { section: "Management", group: "Documentation", page: "Lab Results" },
+  "/prescriptions": { section: "Management", group: "Documentation", page: "Prescriptions" },
+  "/agents/patient-engagement": { section: "Platform", group: "Agents", page: "Patient Engagement Agent" },
+  "/agents/genesis-agent": { section: "Platform", group: "Agents", page: "Genesis Agent" },
+  "/agents/quantum-agent": { section: "Platform", group: "Agents", page: "Quantum Agent" },
+  "/agents/compliance-agent": { section: "Platform", group: "Agents", page: "Compliance Agent" },
+  "/agents/settings": { section: "Platform", group: "Agents", page: "Agent Settings" },
+  "/care-exceptions": { section: "Platform", group: "Console", page: "Care Exceptions" },
+  "/patient-pool": { section: "Platform", group: "Console", page: "Patient Pool" },
+  "/account": { section: "Platform", group: "Settings", page: "Account" },
+  "/preferences": { section: "Platform", group: "Settings", page: "Preferences" },
+  "/security": { section: "Platform", group: "Settings", page: "Security" },
+  "/about": { section: "Platform", group: "Settings", page: "About" },
+  "/cardiology": { section: "Platform", group: "Projects", page: "Cardiology Unit" },
+  "/patient-management": { section: "Platform", group: "Projects", page: "Patient Management" },
+  "/quality-assurance": { section: "Platform", group: "Projects", page: "Quality Assurance" },
+};
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const sidebarItems = [
-    { icon: Home, label: "Dashboard", to: "/" },
-    { icon: Activity, label: "Analytics", to: "/analytics" },
-    { icon: Users, label: "Users", to: "/users" },
-    { icon: FileText, label: "Reports", to: "/reports" },
-    { icon: Settings, label: "Settings", to: "/settings" },
-  ];
+  const location = useLocation();
+  const breadcrumbData = routeToBreadcrumb[location.pathname] || { section: "Platform", group: "Unknown", page: "Page" };
 
   return (
-    <div className="h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-0"
-        } transition-all duration-300 ease-in-out bg-muted/50 border-r overflow-hidden`}
-      >
-        <div className="h-full flex flex-col">
-          <div className="h-14 flex items-center px-4 border-b">
-            <h2 className="font-semibold text-lg">Console</h2>
-          </div>
-          <nav className="flex-1 p-4 space-y-1">
-            {sidebarItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                activeProps={{
-                  className: "bg-accent text-accent-foreground",
-                }}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-          <div className="p-4 border-t">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="h-8 w-8 rounded-full bg-primary/10" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">User</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  user@example.com
-                </p>
-              </div>
+    <StoreProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="/">{breadcrumbData.section}</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbPage>{breadcrumbData.group}</BreadcrumbPage>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{breadcrumbData.page}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className="ml-auto">
+              <NavUser user={userData} />
             </div>
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-4">
+            {children}
           </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Toolbar */}
-        <header className="h-14 border-b bg-background flex items-center px-4 gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="shrink-0"
-          >
-            {sidebarOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </Button>
-
-          <div className="flex-1 flex items-center gap-4">
-            <h1 className="text-lg font-semibold">Application</h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </div>
-        </header>
-
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-auto">
-          <div className="h-full">{children}</div>
-        </main>
-      </div>
-    </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </StoreProvider>
   );
 }

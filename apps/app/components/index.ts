@@ -2,3 +2,5 @@
 /* SPDX-License-Identifier: MIT */
 
 export * from "./error";
+export * from "./stats-card";
+export * from "./surgical-tracking-chart";
