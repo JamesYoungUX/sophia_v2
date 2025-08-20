@@ -23,3 +23,4 @@ export * from "./components/tooltip";
 export * from "./lib/utils";
 
 // Export hooks
+export * from "./hooks";
