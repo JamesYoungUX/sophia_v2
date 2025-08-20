@@ -37,13 +37,15 @@ The project appears to be a well-structured template with:
 
 **Solution**: Start each server individually using separate commands:
 
-- **API Server**: `bun run dev:api` → http://localhost:8787 ✅ Running (Terminal 4)
-- **React App**: `bun --filter @repo/app dev` → http://localhost:5173 ✅ Running (Terminal 6)
-- **Astro Web Server**: `bun run dev:web` → http://localhost:4321 ✅ Running (Terminal 7)
+- **API Server**: `bun run dev:api` → http://localhost:8787 ✅ Running (Terminal 5)
+- **React App**: `bun --filter @repo/app dev` → http://localhost:5173 ✅ Running
+- **Astro Web Server**: `bun run dev:web` → http://localhost:4321 ✅ Running
 
-**Status**: All three development servers are now running successfully without conflicts. The React app startup issue was resolved by avoiding the concurrent execution approach.
+**Status**: All development servers are now running successfully without conflicts.
 
-**Script Update**: Modified root `bun dev` command to only start the React app server instead of all three servers concurrently.
+**API Server Hot Reload Fix**: Fixed duplicate server startup issue in `apps/api/start.ts` by adding conditional check (`import.meta.main`) to prevent Bun's hot reload mechanism from starting multiple server instances on the same port.
+
+**Authentication Endpoints**: Confirmed working - `/api/auth/get-session` and `/health` endpoints are responding correctly.
 
 **Next Steps**: Ready to proceed with development tasks - database setup, authentication system, or other features.
 
