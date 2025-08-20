@@ -7,6 +7,19 @@ import { schema as Db } from "../schema";
 type PatientInsert = typeof Db.patient.$inferInsert;
 
 /**
+ * Generates a 7-character alphanumeric patient ID starting with 'P-'
+ * Format: P-XXXXX where X is alphanumeric (A-Z, 0-9)
+ */
+function generatePatientId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'P-';
+  for (let i = 0; i < 5; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+/**
  * Seeds the database with test patient records.
  */
 export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
@@ -15,7 +28,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
   // Test patient data with realistic information - 40 patients
   const patients: PatientInsert[] = [
     {
-      patId: "PAT001",
+      patId: generatePatientId(),
       patMrnId: "MRN001234",
       patName: "John Michael Doe",
       patFirstName: "John",
@@ -38,7 +51,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT002",
+      patId: generatePatientId(),
       patMrnId: "MRN005678",
       patName: "Jane Elizabeth Smith",
       patFirstName: "Jane",
@@ -59,7 +72,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT003",
+      patId: generatePatientId(),
       patMrnId: "MRN009876",
       patName: "Carlos Antonio Rodriguez",
       patFirstName: "Carlos",
@@ -82,7 +95,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT004",
+      patId: generatePatientId(),
       patMrnId: "MRN011223",
       patName: "Sarah Marie Johnson",
       patFirstName: "Sarah",
@@ -104,7 +117,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT005",
+      patId: generatePatientId(),
       patMrnId: "MRN033445",
       patName: "Michael Wei Chen",
       patFirstName: "Michael",
@@ -127,7 +140,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT006",
+      patId: generatePatientId(),
       patMrnId: "MRN044556",
       patName: "Emily Rose Wilson",
       patFirstName: "Emily",
@@ -149,7 +162,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT007",
+      patId: generatePatientId(),
       patMrnId: "MRN055667",
       patName: "David James Brown",
       patFirstName: "David",
@@ -172,7 +185,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT008",
+      patId: generatePatientId(),
       patMrnId: "MRN066778",
       patName: "Maria Guadalupe Garcia",
       patFirstName: "Maria",
@@ -194,7 +207,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT009",
+      patId: generatePatientId(),
       patMrnId: "MRN077889",
       patName: "Robert Lee Taylor",
       patFirstName: "Robert",
@@ -217,7 +230,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT010",
+      patId: generatePatientId(),
       patMrnId: "MRN088990",
       patName: "Lisa Ann Davis",
       patFirstName: "Lisa",
@@ -239,7 +252,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT011",
+      patId: generatePatientId(),
       patMrnId: "MRN099001",
       patName: "James Patrick O'Connor",
       patFirstName: "James",
@@ -261,7 +274,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT012",
+      patId: generatePatientId(),
       patMrnId: "MRN100112",
       patName: "Angela Marie Thompson",
       patFirstName: "Angela",
@@ -284,7 +297,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT013",
+      patId: generatePatientId(),
       patMrnId: "MRN111223",
       patName: "Ahmed Hassan Ali",
       patFirstName: "Ahmed",
@@ -306,7 +319,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT014",
+      patId: generatePatientId(),
       patMrnId: "MRN122334",
       patName: "Jennifer Lynn White",
       patFirstName: "Jennifer",
@@ -328,7 +341,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT015",
+      patId: generatePatientId(),
       patMrnId: "MRN133445",
       patName: "Kevin Michael Murphy",
       patFirstName: "Kevin",
@@ -351,7 +364,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT016",
+      patId: generatePatientId(),
       patMrnId: "MRN144556",
       patName: "Priya Sharma Patel",
       patFirstName: "Priya",
@@ -373,7 +386,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT017",
+      patId: generatePatientId(),
       patMrnId: "MRN155667",
       patName: "Christopher Paul Anderson",
       patFirstName: "Christopher",
@@ -396,7 +409,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT018",
+      patId: generatePatientId(),
       patMrnId: "MRN166778",
       patName: "Michelle Rose Jackson",
       patFirstName: "Michelle",
@@ -418,7 +431,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT019",
+      patId: generatePatientId(),
       patMrnId: "MRN177889",
       patName: "Daniel Scott Martin",
       patFirstName: "Daniel",
@@ -440,7 +453,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT020",
+      patId: generatePatientId(),
       patMrnId: "MRN188990",
       patName: "Rebecca Jane Lewis",
       patFirstName: "Rebecca",
@@ -463,7 +476,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT021",
+      patId: generatePatientId(),
       patMrnId: "MRN199001",
       patName: "Steven Robert Clark",
       patFirstName: "Steven",
@@ -485,7 +498,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT022",
+      patId: generatePatientId(),
       patMrnId: "MRN200112",
       patName: "Lisa Ann Rodriguez",
       patFirstName: "Lisa",
@@ -507,7 +520,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT023",
+      patId: generatePatientId(),
       patMrnId: "MRN211223",
       patName: "Matthew James Wilson",
       patFirstName: "Matthew",
@@ -530,7 +543,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT024",
+      patId: generatePatientId(),
       patMrnId: "MRN222334",
       patName: "Amanda Grace Taylor",
       patFirstName: "Amanda",
@@ -552,7 +565,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT025",
+      patId: generatePatientId(),
       patMrnId: "MRN233445",
       patName: "Brian Keith Moore",
       patFirstName: "Brian",
@@ -574,7 +587,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT026",
+      patId: generatePatientId(),
       patMrnId: "MRN244556",
       patName: "Samantha Joy Davis",
       patFirstName: "Samantha",
@@ -597,7 +610,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT027",
+      patId: generatePatientId(),
       patMrnId: "MRN255667",
       patName: "Carlos Miguel Hernandez",
       patFirstName: "Carlos",
@@ -619,7 +632,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT028",
+      patId: generatePatientId(),
       patMrnId: "MRN266778",
       patName: "Nicole Marie Garcia",
       patFirstName: "Nicole",
@@ -641,7 +654,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT029",
+      patId: generatePatientId(),
       patMrnId: "MRN277889",
       patName: "Timothy Alan Johnson",
       patFirstName: "Timothy",
@@ -664,7 +677,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT030",
+      patId: generatePatientId(),
       patMrnId: "MRN288990",
       patName: "Rachel Elizabeth Brown",
       patFirstName: "Rachel",
@@ -686,7 +699,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT031",
+      patId: generatePatientId(),
       patMrnId: "MRN299001",
       patName: "Gregory Thomas Miller",
       patFirstName: "Gregory",
@@ -708,7 +721,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT032",
+      patId: generatePatientId(),
       patMrnId: "MRN300112",
       patName: "Stephanie Lynn Wilson",
       patFirstName: "Stephanie",
@@ -730,7 +743,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT033",
+      patId: generatePatientId(),
       patMrnId: "MRN311223",
       patName: "Anthony Joseph Martinez",
       patFirstName: "Anthony",
@@ -753,7 +766,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT034",
+      patId: generatePatientId(),
       patMrnId: "MRN322334",
       patName: "Kimberly Sue Anderson",
       patFirstName: "Kimberly",
@@ -775,7 +788,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT035",
+      patId: generatePatientId(),
       patMrnId: "MRN333445",
       patName: "Jason David Thomas",
       patFirstName: "Jason",
@@ -797,7 +810,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT036",
+      patId: generatePatientId(),
       patMrnId: "MRN344556",
       patName: "Melissa Dawn Jackson",
       patFirstName: "Melissa",
@@ -820,7 +833,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT037",
+      patId: generatePatientId(),
       patMrnId: "MRN355667",
       patName: "Ryan Christopher White",
       patFirstName: "Ryan",
@@ -842,7 +855,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT038",
+      patId: generatePatientId(),
       patMrnId: "MRN366778",
       patName: "Laura Michelle Harris",
       patFirstName: "Laura",
@@ -864,7 +877,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "No"
     },
     {
-      patId: "PAT039",
+      patId: generatePatientId(),
       patMrnId: "MRN377889",
       patName: "Eric William Clark",
       patFirstName: "Eric",
@@ -887,7 +900,7 @@ export async function seedPatients(db: PostgresJsDatabase<typeof Db>) {
       advDirectiveYn: "Yes"
     },
     {
-      patId: "PAT040",
+      patId: generatePatientId(),
       patMrnId: "MRN388990",
       patName: "Heather Rose Rodriguez",
       patFirstName: "Heather",

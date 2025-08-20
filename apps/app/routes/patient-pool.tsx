@@ -15,6 +15,7 @@ import {
 } from "@repo/ui/components/table";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import { Status, StatusIndicator, StatusLabel } from "@repo/ui/components/ui/kibo-ui/status";
 import {
   Pagination,
   PaginationContent,
@@ -28,7 +29,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { requireAuth } from "@/lib/auth-guard";
 import { api } from "@/lib/trpc";
 import { useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy, ChevronUp, ChevronDown } from "lucide-react";
 
 // Helper function to calculate age from birth date
 function calculateAge(birthDate: Date | null): number {
@@ -69,6 +70,7 @@ function getRiskBadgeVariant(riskLevel: string) {
 function PatientPoolTable() {
   const { data: patients, isLoading, error } = api.patient.list.useQuery();
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const itemsPerPage = 20;
 
   if (isLoading) {
@@ -103,11 +105,24 @@ function PatientPoolTable() {
 
   const patientPoolData = patients || [];
   
+  // Sort patients by name if sorting is enabled
+  const sortedPatients = sortDirection 
+    ? [...patientPoolData].sort((a, b) => {
+        const nameA = `${a.lastName || ''}, ${a.firstName || ''}`.toLowerCase();
+        const nameB = `${b.lastName || ''}, ${b.firstName || ''}`.toLowerCase();
+        if (sortDirection === 'asc') {
+          return nameA.localeCompare(nameB);
+        } else {
+          return nameB.localeCompare(nameA);
+        }
+      })
+    : patientPoolData;
+  
   // Pagination calculations
-  const totalPages = Math.ceil(patientPoolData.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedPatients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentPageData = patientPoolData.slice(startIndex, endIndex);
+  const currentPageData = sortedPatients.slice(startIndex, endIndex);
 
   return (
     <Card>
@@ -119,13 +134,33 @@ function PatientPoolTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Patient ID</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                  onClick={() => {
+                    if (sortDirection === null || sortDirection === 'desc') {
+                      setSortDirection('asc');
+                    } else {
+                      setSortDirection('desc');
+                    }
+                    setCurrentPage(1); // Reset to first page when sorting
+                  }}
+                >
+                  <span className="flex items-center gap-1">
+                    Name
+                    {sortDirection === 'asc' && <ChevronUp className="h-4 w-4" />}
+                    {sortDirection === 'desc' && <ChevronDown className="h-4 w-4" />}
+                  </span>
+                </Button>
+              </TableHead>
               <TableHead>MRN</TableHead>
-              <TableHead>Primary Condition</TableHead>
+              <TableHead>Surgery</TableHead>
               <TableHead>Risk Level</TableHead>
               <TableHead>Last Visit</TableHead>
               <TableHead>Next Appointment</TableHead>
               <TableHead>Primary Provider</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -176,6 +211,12 @@ function PatientPoolTable() {
                   <TableCell>N/A</TableCell>
                   <TableCell>N/A</TableCell>
                   <TableCell>N/A</TableCell>
+                  <TableCell>
+                    <Status status="online">
+                      <StatusIndicator />
+                      <StatusLabel>ontrack</StatusLabel>
+                    </Status>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -185,7 +226,7 @@ function PatientPoolTable() {
       <CardFooter className="flex flex-col gap-4">
         <div className="flex justify-between items-center w-full">
           <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1}-{Math.min(endIndex, patientPoolData.length)} of {patientPoolData.length} patients
+            Showing {startIndex + 1}-{Math.min(endIndex, sortedPatients.length)} of {sortedPatients.length} patients
           </div>
           {totalPages > 1 && (
             <Pagination>
@@ -262,9 +303,7 @@ export const Route = createFileRoute("/patient-pool")({
     <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">
       <h1 className="text-3xl font-bold mb-4">Patient Pool</h1>
       <div className="mb-4 text-base text-muted-foreground">
-        Monitor and manage your active patient pool. Track patient risk levels,
-        upcoming appointments, and care coordination across your healthcare team.
-        This centralized view helps ensure no patient falls through the cracks.
+        Monitor your active patient pool with ease — track risk levels, upcoming appointments, and coordinate care across your team. This centralized view helps streamline workflows and ensures every patient receives the attention they need.
       </div>
       <PatientPoolTable />
     </div>

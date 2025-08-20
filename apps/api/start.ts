@@ -116,4 +116,17 @@ app.use("*", async (c, next) => {
  */
 app.route("/", api);
 
+/**
+ * Start the development server
+ */
+const port = 8787;
+console.log(`[DEV] Starting API server on port ${port}`);
+
+Bun.serve({
+  port,
+  fetch: app.fetch,
+});
+
+console.log(`[DEV] API server running at http://localhost:${port}`);
+
 export default app;

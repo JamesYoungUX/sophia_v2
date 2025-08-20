@@ -33,6 +33,7 @@ export const patientRouter = router({
           ethnicity: patient.ethnicGroupCName,
           language: patient.languageCName,
           religion: patient.religionCName,
+          status: patient.patStatusCName,
         })
         .from(patient)
         .limit(limit)
