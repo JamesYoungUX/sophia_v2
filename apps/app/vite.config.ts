@@ -24,8 +24,12 @@ export default defineProject(({ mode }) => {
   const env = loadEnv(mode, envDir, "");
 
   publicEnvVars.forEach((key) => {
-    if (!env[key]) throw new Error(`Missing environment variable: ${key}`);
-    process.env[`VITE_${key}`] = env[key];
+    if (env[key]) {
+      process.env[`VITE_${key}`] = env[key];
+    } else {
+      console.warn(`Warning: Missing environment variable: ${key}`);
+      process.env[`VITE_${key}`] = '';
+    }
   });
 
   return {
@@ -75,7 +79,7 @@ export default defineProject(({ mode }) => {
     ],
 
     server: {
-      port: 5180,
+      port: 5173,
       proxy: {
         "/api": {
           target:

@@ -57,11 +57,23 @@ const cf = await getPlatformProxy<CloudflareEnv>({
  * Middleware to inject database binding into request context.
  *
  * @remarks
- * Uses Neon PostgreSQL via Hyperdrive for both local development
- * and production deployment with connection pooling and caching.
+ * Uses Neon PostgreSQL via Hyperdrive for production deployment.
+ * For local development, falls back to direct DATABASE_URL connection
+ * when Hyperdrive bindings are not available.
  */
 app.use("*", async (c, next) => {
-  const db = createDb(cf.env.HYPERDRIVE);
+  let db;
+  
+  // Check if Hyperdrive binding is available (production/staging)
+  if (cf.env.HYPERDRIVE) {
+    db = createDb(cf.env.HYPERDRIVE);
+  } else {
+    // Fallback for local development - use DATABASE_URL directly
+    console.log("[DEV] Hyperdrive not available, using direct DATABASE_URL connection");
+    const { createDbDirect } = await import("./lib/db-direct.js");
+    db = createDbDirect();
+  }
+  
   c.set("db", db);
   c.set("auth", createAuth(db, cf.env));
   await next();
