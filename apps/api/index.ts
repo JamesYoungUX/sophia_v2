@@ -13,12 +13,14 @@ import { Hono } from "hono";
 import type { AppContext } from "./lib/context.js";
 import { router } from "./lib/trpc.js";
 import { organizationRouter } from "./routers/organization.js";
+import { patientRouter } from "./routers/patient.js";
 import { userRouter } from "./routers/user.js";
 
 // tRPC API router
 const appRouter = router({
   user: userRouter,
   organization: organizationRouter,
+  patient: patientRouter,
 });
 
 // HTTP router

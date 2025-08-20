@@ -5,6 +5,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { routeTree } from "./lib/routeTree.gen";
+import { Providers } from "./lib/providers";
 import "./styles/globals.css";
 
 const container = document.getElementById("root");
@@ -13,7 +14,9 @@ const router = createRouter({ routeTree });
 
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Providers>
+      <RouterProvider router={router} />
+    </Providers>
   </StrictMode>,
 );
 

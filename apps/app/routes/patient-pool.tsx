@@ -16,65 +16,30 @@ import {
 import { Badge } from "@repo/ui/components/badge";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuth } from "@/lib/auth-guard";
+import { api } from "@/lib/trpc";
 
-// Placeholder data for demonstration
-const patientPoolData = [
-  {
-    id: "P001",
-    name: "Johnson, Sarah",
-    dob: "03/15/1958",
-    age: 67,
-    condition: "Hypertension",
-    riskLevel: "Medium",
-    lastVisit: "2025-06-10",
-    nextAppointment: "2025-08-24",
-    primaryProvider: "Dr. Smith",
-  },
-  {
-    id: "P002",
-    name: "Chen, Michael",
-    dob: "08/22/1970",
-    age: 54,
-    condition: "Diabetes Type 2",
-    riskLevel: "High",
-    lastVisit: "2025-06-08",
-    nextAppointment: "2025-08-25",
-    primaryProvider: "Dr. Johnson",
-  },
-  {
-    id: "P003",
-    name: "Rodriguez, Emily",
-    dob: "11/07/1982",
-    age: 42,
-    condition: "Asthma",
-    riskLevel: "Low",
-    lastVisit: "2025-05-28",
-    nextAppointment: "2025-09-02",
-    primaryProvider: "Dr. Williams",
-  },
-  {
-    id: "P004",
-    name: "Thompson, Robert",
-    dob: "01/30/1954",
-    age: 71,
-    condition: "Heart Disease",
-    riskLevel: "High",
-    lastVisit: "2025-06-12",
-    nextAppointment: "2025-08-29",
-    primaryProvider: "Dr. Davis",
-  },
-  {
-    id: "P005",
-    name: "Anderson, Lisa",
-    dob: "05/14/1986",
-    age: 38,
-    condition: "Migraine",
-    riskLevel: "Low",
-    lastVisit: "2025-06-05",
-    nextAppointment: "2025-09-05",
-    primaryProvider: "Dr. Wilson",
-  },
-];
+// Helper function to calculate age from birth date
+function calculateAge(birthDate: Date | null): number {
+  if (!birthDate) return 0;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+// Helper function to format date
+function formatDate(date: Date | null): string {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
 
 function getRiskBadgeVariant(riskLevel: string) {
   switch (riskLevel) {
@@ -90,6 +55,40 @@ function getRiskBadgeVariant(riskLevel: string) {
 }
 
 function PatientPoolTable() {
+  const { data: patients, isLoading, error } = api.patient.list.useQuery();
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Patient Pool</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-muted-foreground">Loading patients...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Patient Pool</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-destructive">Error loading patients: {error.message}</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const patientPoolData = patients || [];
+
   return (
     <Card>
       <CardHeader>
@@ -109,31 +108,38 @@ function PatientPoolTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {patientPoolData.map((patient) => (
-              <TableRow key={patient.id}>
-                <TableCell className="font-medium">{patient.id}</TableCell>
-                <TableCell>
-                  <div>
+            {patientPoolData.map((patient) => {
+              const fullName = `${patient.lastName || ''}, ${patient.firstName || ''}`;
+              const birthDate = patient.birthDate ? new Date(patient.birthDate) : null;
+              const age = calculateAge(birthDate);
+              const formattedDob = formatDate(birthDate);
+              
+              return (
+                <TableRow key={patient.patId}>
+                  <TableCell className="font-medium">{patient.patId}</TableCell>
+                  <TableCell>
                     <div>
-                      <span className="font-semibold">{patient.name.split(', ')[0]}</span>
-                      {patient.name.includes(', ') && `, ${patient.name.split(', ')[1]}`}
+                      <div>
+                        <span className="font-semibold">{patient.lastName || 'Unknown'}</span>
+                        {patient.firstName && `, ${patient.firstName}`}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        DOB: {formattedDob} • Age: {age}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      DOB: {patient.dob} • Age: {patient.age}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{patient.condition}</TableCell>
-                <TableCell>
-                  <Badge variant={getRiskBadgeVariant(patient.riskLevel)}>
-                    {patient.riskLevel}
-                  </Badge>
-                </TableCell>
-                <TableCell>{patient.lastVisit}</TableCell>
-                <TableCell>{patient.nextAppointment}</TableCell>
-                <TableCell>{patient.primaryProvider}</TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>N/A</TableCell>
+                  <TableCell>
+                    <Badge variant={getRiskBadgeVariant("Low")}>
+                      Low
+                    </Badge>
+                  </TableCell>
+                  <TableCell>N/A</TableCell>
+                  <TableCell>N/A</TableCell>
+                  <TableCell>N/A</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>

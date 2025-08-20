@@ -59,11 +59,20 @@ app.use("*", cors({
  * - Reads configuration from wrangler.jsonc in the parent directory
  * - Enables persistence to maintain D1 database state across restarts
  * - Provides access to all Cloudflare bindings defined in wrangler.jsonc
+ * - Gracefully handles missing Hyperdrive bindings for local development
  */
-const cf = await getPlatformProxy<CloudflareEnv>({
-  configPath: "../edge/wrangler.jsonc",
-  persist: true,
-});
+let cf: Awaited<ReturnType<typeof getPlatformProxy<CloudflareEnv>>> | null = null;
+
+try {
+  cf = await getPlatformProxy<CloudflareEnv>({
+    configPath: "../edge/wrangler.jsonc",
+    persist: true,
+  });
+  console.log("[DEV] Cloudflare Workers environment initialized successfully");
+} catch (error) {
+  console.log("[DEV] Failed to initialize Cloudflare Workers environment, using direct database connection");
+  console.log("[DEV] Error:", error instanceof Error ? error.message : String(error));
+}
 
 /**
  * Middleware to inject database binding into request context.
@@ -76,13 +85,17 @@ const cf = await getPlatformProxy<CloudflareEnv>({
 app.use("*", async (c, next) => {
   let db;
   
-  // Check if Hyperdrive binding is available (production/staging)
-  if (cf.env.HYPERDRIVE) {
+  // Check if Cloudflare Workers environment and Hyperdrive binding are available
+  if (cf && cf.env.HYPERDRIVE) {
+    console.log("[DEV] Using Hyperdrive connection");
     db = createDb(cf.env.HYPERDRIVE);
+  } else if (cf && cf.env.HYPERDRIVE_DIRECT) {
+    console.log("[DEV] Using Hyperdrive Direct connection");
+    db = createDb(cf.env.HYPERDRIVE_DIRECT);
   } else {
     // Fallback for local development - use DATABASE_URL directly
     console.log("[DEV] Hyperdrive not available, using direct DATABASE_URL connection");
-    const { createDbDirect } = await import("./lib/db-direct.js");
+    const { createDbDirect } = await import("./lib/db-direct");
     db = createDbDirect();
   }
   
