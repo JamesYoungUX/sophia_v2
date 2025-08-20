@@ -58,7 +58,7 @@ function Login() {
       </div>
       <div className="bg-muted relative hidden lg:block">
         <img
-          src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=1200&q=80"
+          src="/unsplash/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=1200&q=80"
           alt="Healthcare professionals collaborating"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
