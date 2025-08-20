@@ -33,19 +33,21 @@ The project appears to be a well-structured template with:
 
 ### Development Server Status ✅ RESOLVED
 
-**Issue**: The root `bun dev` command uses `concurrently` to start all three servers simultaneously, which caused conflicts and prevented proper startup.
+**Issue**: The `bun --filter @repo/api dev` command was starting multiple server instances simultaneously, causing EADDRINUSE errors on port 8787.
 
-**Solution**: Start each server individually using separate commands:
+**Root Cause**: Bun's workspace filtering mechanism was executing the dev script multiple times in parallel, and Bun was also trying to auto-serve the exported app due to its fetch method detection.
 
-- **API Server**: `bun run dev:api` → http://localhost:8787 ✅ Running (Terminal 5)
+**Solution Applied**:
+1. **Removed --watch flag**: Modified `apps/api/package.json` to remove `--watch` from the dev script to prevent hot reload conflicts
+2. **Prevented Bun auto-serving**: Commented out `export default app` in `apps/api/start.ts` to prevent Bun's automatic server detection
+3. **Direct execution**: Use `cd apps/api && bun run dev` instead of `bun --filter @repo/api dev` to avoid workspace filtering issues
+
+**Current Status**:
+- **API Server**: `cd apps/api && bun run dev` → http://localhost:8787 ✅ Running (Terminal 5)
 - **React App**: `bun --filter @repo/app dev` → http://localhost:5173 ✅ Running
-- **Astro Web Server**: `bun run dev:web` → http://localhost:4321 ✅ Running
+- **Authentication Endpoints**: Confirmed working - `/api/auth/get-session` and `/health` endpoints responding correctly
 
-**Status**: All development servers are now running successfully without conflicts.
-
-**API Server Hot Reload Fix**: Fixed duplicate server startup issue in `apps/api/start.ts` by adding conditional check (`import.meta.main`) to prevent Bun's hot reload mechanism from starting multiple server instances on the same port.
-
-**Authentication Endpoints**: Confirmed working - `/api/auth/get-session` and `/health` endpoints are responding correctly.
+**Key Lesson**: The `bun --filter @repo/api dev` command has issues with multiple execution. Use direct navigation to the API directory for reliable server startup.
 
 **Next Steps**: Ready to proceed with development tasks - database setup, authentication system, or other features.
 

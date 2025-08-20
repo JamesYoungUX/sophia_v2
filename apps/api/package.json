@@ -9,7 +9,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "dev": "bun run --watch --env-file ../../.env --env-file ../../.env.local ./start.ts",
+    "dev": "bun run --env-file ../../.env --env-file ../../.env.local ./start.ts",
+    "dev:watch": "bun run --watch --env-file ../../.env --env-file ../../.env.local ./start.ts",
     "build": "bun build index.ts --outdir dist --target bun",
     "test": "vitest",
     "typecheck": "tsc --noEmit"

@@ -122,14 +122,13 @@ app.route("/", api);
 const port = 8787;
 console.log(`[DEV] Starting API server on port ${port}`);
 
-// Only start the server if this file is being run directly (not imported)
-if (import.meta.main) {
-  Bun.serve({
-    port,
-    fetch: app.fetch,
-  });
-  
-  console.log(`[DEV] API server running at http://localhost:${port}`);
-}
+// Start the server
+const server = Bun.serve({
+  port,
+  fetch: app.fetch,
+});
 
-export default app;
+console.log(`[DEV] API server running at http://localhost:${port}`);
+
+// Don't export the app to prevent Bun's auto-serving
+// export default app;
