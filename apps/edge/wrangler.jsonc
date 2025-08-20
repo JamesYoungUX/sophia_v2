@@ -19,16 +19,18 @@
     "ENVIRONMENT": "development",
     "ALLOWED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173"
   },
-  "hyperdrive": [
-    {
-      "binding": "HYPERDRIVE",
-      "id": "your-hyperdrive-cached-id-here"
-    },
-    {
-      "binding": "HYPERDRIVE_DIRECT",
-      "id": "your-hyperdrive-direct-id-here"
-    }
-  ],
+  // Hyperdrive bindings commented out for local development
+  // Uncomment and add real IDs when deploying to Cloudflare
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "your-hyperdrive-cached-id-here"
+  //   },
+  //   {
+  //     "binding": "HYPERDRIVE_DIRECT",
+  //     "id": "your-hyperdrive-direct-id-here"
+  //   }
+  // ],
   "kv_namespaces": [],
 
   // Overrides and settings for each deployment environment
