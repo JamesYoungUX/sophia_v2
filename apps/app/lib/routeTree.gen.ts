@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './../routes/__root'
 import { Route as PatientPoolRouteImport } from './../routes/patient-pool'
+import { Route as LoginRouteImport } from './../routes/login'
 import { Route as CarePlansRouteImport } from './../routes/care-plans'
 import { Route as CareExceptionsRouteImport } from './../routes/care-exceptions'
 import { Route as AccountRouteImport } from './../routes/account'
@@ -23,6 +24,11 @@ import { Route as AgentsComplianceAgentRouteImport } from './../routes/agents.co
 const PatientPoolRoute = PatientPoolRouteImport.update({
   id: '/patient-pool',
   path: '/patient-pool',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CarePlansRoute = CarePlansRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/care-exceptions': typeof CareExceptionsRoute
   '/care-plans': typeof CarePlansRoute
+  '/login': typeof LoginRoute
   '/patient-pool': typeof PatientPoolRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/care-exceptions': typeof CareExceptionsRoute
   '/care-plans': typeof CarePlansRoute
+  '/login': typeof LoginRoute
   '/patient-pool': typeof PatientPoolRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/care-exceptions': typeof CareExceptionsRoute
   '/care-plans': typeof CarePlansRoute
+  '/login': typeof LoginRoute
   '/patient-pool': typeof PatientPoolRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/care-exceptions'
     | '/care-plans'
+    | '/login'
     | '/patient-pool'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/care-exceptions'
     | '/care-plans'
+    | '/login'
     | '/patient-pool'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/care-exceptions'
     | '/care-plans'
+    | '/login'
     | '/patient-pool'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   CareExceptionsRoute: typeof CareExceptionsRoute
   CarePlansRoute: typeof CarePlansRoute
+  LoginRoute: typeof LoginRoute
   PatientPoolRoute: typeof PatientPoolRoute
   AgentsComplianceAgentRoute: typeof AgentsComplianceAgentRoute
   AgentsGenesisAgentRoute: typeof AgentsGenesisAgentRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/patient-pool'
       fullPath: '/patient-pool'
       preLoaderRoute: typeof PatientPoolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/care-plans': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   CareExceptionsRoute: CareExceptionsRoute,
   CarePlansRoute: CarePlansRoute,
+  LoginRoute: LoginRoute,
   PatientPoolRoute: PatientPoolRoute,
   AgentsComplianceAgentRoute: AgentsComplianceAgentRoute,
   AgentsGenesisAgentRoute: AgentsGenesisAgentRoute,
