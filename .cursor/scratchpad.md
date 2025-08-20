@@ -38,16 +38,16 @@ The project appears to be a well-structured template with:
 **Root Cause**: Bun's workspace filtering mechanism was executing the dev script multiple times in parallel, and Bun was also trying to auto-serve the exported app due to its fetch method detection.
 
 **Solution Applied**:
-1. **Removed --watch flag**: Modified `apps/api/package.json` to remove `--watch` from the dev script to prevent hot reload conflicts
-2. **Prevented Bun auto-serving**: Commented out `export default app` in `apps/api/start.ts` to prevent Bun's automatic server detection
-3. **Direct execution**: Use `cd apps/api && bun run dev` instead of `bun --filter @repo/api dev` to avoid workspace filtering issues
+1. **Modified start.ts export**: Changed `apps/api/start.ts` to export a server configuration object `{ port: 8787, fetch: app.fetch }` instead of manually calling `Bun.serve()` or just exporting the app
+2. **Restored proper dev script**: Reverted `apps/api/package.json` dev script to use `start.ts` (not `index.ts`) since start.ts contains all the middleware setup including database and auth initialization
+3. **Eliminated double server startup**: The new export format allows Bun to auto-serve without conflicts from manual server creation
 
 **Current Status**:
-- **API Server**: `cd apps/api && bun run dev` → http://localhost:8787 ✅ Running (Terminal 5)
+- **API Server**: `bun --filter @repo/api dev` → http://localhost:8787 ✅ Running (Terminal 5)
 - **React App**: `bun --filter @repo/app dev` → http://localhost:5173 ✅ Running
-- **Authentication Endpoints**: Confirmed working - `/api/auth/get-session` and `/health` endpoints responding correctly
+- **Authentication Endpoints**: Confirmed working - `/api/auth/get-session` returning HTTP 200 with proper null response
 
-**Key Lesson**: The `bun --filter @repo/api dev` command has issues with multiple execution. Use direct navigation to the API directory for reliable server startup.
+**Key Lesson**: The issue was that both `start.ts` (with manual `Bun.serve()`) and Bun's auto-serving were trying to start servers simultaneously. The solution was to let Bun handle the server startup by exporting a proper server configuration object.
 
 **Next Steps**: Ready to proceed with development tasks - database setup, authentication system, or other features.
 

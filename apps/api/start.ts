@@ -117,18 +117,11 @@ app.use("*", async (c, next) => {
 app.route("/", api);
 
 /**
- * Start the development server
+ * Export the configured app for Bun to auto-serve
  */
-const port = 8787;
-console.log(`[DEV] Starting API server on port ${port}`);
+console.log(`[DEV] API server configured for port 8787`);
 
-// Start the server
-const server = Bun.serve({
-  port,
+export default {
+  port: 8787,
   fetch: app.fetch,
-});
-
-console.log(`[DEV] API server running at http://localhost:${port}`);
-
-// Don't export the app to prevent Bun's auto-serving
-// export default app;
+};
