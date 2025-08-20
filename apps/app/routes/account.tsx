@@ -1,19 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@/lib/auth";
 import { requireAuth } from "@/lib/auth-guard";
-import { AppSidebar } from "@/components/app-sidebar";
-import { NavUser } from "@/components/nav-user";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  Separator,
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
   Card,
   CardContent,
   CardDescription,
@@ -41,12 +29,6 @@ function AccountPage() {
     avatar: session?.user?.image || "",
   };
 
-  const userData = {
-    name: session?.user?.name || "User",
-    email: session?.user?.email || "user@example.com",
-    avatar: session?.user?.image || "/avatars/default.jpg",
-  };
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -57,38 +39,15 @@ function AccountPage() {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Settings
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Account</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="ml-auto">
-            <NavUser user={userData} />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-6 p-6">
-          <div className="space-y-0.5">
-            <h2 className="text-2xl font-bold tracking-tight">Account Settings</h2>
-            <p className="text-muted-foreground">
-              Manage your account settings and preferences.
-            </p>
-          </div>
+    <div className="space-y-6">
+      <div className="space-y-0.5">
+        <h2 className="text-2xl font-bold tracking-tight">Account Settings</h2>
+        <p className="text-muted-foreground">
+          Manage your account settings and preferences.
+        </p>
+      </div>
 
-          <div className="grid gap-6">
+      <div className="grid gap-6">
             {/* Profile Card */}
             <Card>
               <CardHeader>
@@ -195,8 +154,6 @@ function AccountPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
   );
 }
