@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/auth-guard";
 
 const quantumTodos = [
   "Design Quantum Agent analytics and outcome tracking core",
@@ -18,6 +19,7 @@ const buildInstructions = [
 ];
 
 export const Route = createFileRoute("/agents/quantum-agent")({
+  beforeLoad: requireAuth,
   component: () => (
     <>
       <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">

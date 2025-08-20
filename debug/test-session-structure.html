@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Session Structure</title>
+</head>
+<body>
+    <h1>Test Session Structure</h1>
+    <button onclick="testSessionStructure()">Test Session Structure</button>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="results"></div>
+
+    <script>
+        const DEBUG_LOG = true;
+        
+        function log(message) {
+            if (DEBUG_LOG) {
+                console.log(message);
+                const results = document.getElementById('results');
+                results.innerHTML += '<p>' + message + '</p>';
+            }
+        }
+        
+        async function testSessionStructure() {
+            log('Testing session structure...');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/session', {
+                    credentials: 'include'
+                });
+                const sessionData = await response.json();
+                log('Session response status: ' + response.status);
+                log('Session data structure: ' + JSON.stringify(sessionData, null, 2));
+                
+                // Test different possible structures
+                if (sessionData) {
+                    log('sessionData exists');
+                    if (sessionData.user) {
+                        log('sessionData.user exists: ' + JSON.stringify(sessionData.user));
+                    }
+                    if (sessionData.data) {
+                        log('sessionData.data exists: ' + JSON.stringify(sessionData.data));
+                        if (sessionData.data.user) {
+                            log('sessionData.data.user exists: ' + JSON.stringify(sessionData.data.user));
+                        }
+                    }
+                }
+            } catch (error) {
+                log('Error testing session: ' + error.message);
+            }
+        }
+        
+        async function testLogin() {
+            log('Testing login...');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/sign-in/email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+                const loginData = await response.json();
+                log('Login response status: ' + response.status);
+                log('Login data: ' + JSON.stringify(loginData, null, 2));
+            } catch (error) {
+                log('Error testing login: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

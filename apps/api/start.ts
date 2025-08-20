@@ -23,6 +23,7 @@
  */
 
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { getPlatformProxy } from "wrangler";
 import api from "./index.js";
 import { createAuth } from "./lib/auth.js";
@@ -39,6 +40,17 @@ type CloudflareEnv = {
  * Initialize the local development server with Cloudflare bindings.
  */
 const app = new Hono<AppContext>();
+
+/**
+ * CORS middleware for local development
+ */
+app.use("*", cors({
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true,
+  allowHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  exposeHeaders: ["Content-Type", "Set-Cookie"]
+}));
 
 /**
  * Create a local Cloudflare environment proxy.
@@ -75,7 +87,13 @@ app.use("*", async (c, next) => {
   }
   
   c.set("db", db);
-  c.set("auth", createAuth(db, cf.env));
+  // Use process.env for auth to access .env.local variables
+  const authEnv = {
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET!,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!
+  };
+  c.set("auth", createAuth(db, authEnv));
   await next();
 });
 

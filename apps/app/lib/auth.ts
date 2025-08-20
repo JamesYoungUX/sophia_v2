@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: MIT */
 
 import {
-  anonymousClient,
   organizationClient,
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
@@ -12,12 +11,12 @@ import { createAuthClient } from "better-auth/react";
 type AuthClient = ReturnType<
   typeof createAuthClient<{
     plugins: [
-      ReturnType<typeof anonymousClient>,
       ReturnType<typeof organizationClient>,
     ];
   }>
 >;
 
 export const auth: AuthClient = createAuthClient({
-  plugins: [anonymousClient(), organizationClient()],
+  baseURL: "http://localhost:8787", // API server URL
+  plugins: [organizationClient()], // Removed anonymousClient to match server config
 });

@@ -1,5 +1,6 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-guard";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -27,14 +28,7 @@ import {
 } from "@repo/ui";
 
 export const Route = createFileRoute("/account")({
-  beforeLoad: async () => {
-    const { data: session } = await auth.getSession();
-    if (!session) {
-      throw redirect({
-        to: "/",
-      });
-    }
-  },
+  beforeLoad: requireAuth,
   component: AccountPage,
 });
 
@@ -45,6 +39,12 @@ function AccountPage() {
     name: session?.user?.name || "User",
     email: session?.user?.email || "user@example.com",
     avatar: session?.user?.image || "",
+  };
+
+  const userData = {
+    name: session?.user?.name || "User",
+    email: session?.user?.email || "user@example.com",
+    avatar: session?.user?.image || "/avatars/default.jpg",
   };
 
   const getInitials = (name: string) => {
@@ -77,7 +77,7 @@ function AccountPage() {
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto">
-            <NavUser />
+            <NavUser user={userData} />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-6">

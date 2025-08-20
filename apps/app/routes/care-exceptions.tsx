@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/auth-guard";
 import { auth } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
 import { Badge } from "@repo/ui";
@@ -6,13 +7,8 @@ import { Button } from "@repo/ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui";
 import { AlertTriangle, Clock, User, Calendar, ChevronRight } from "lucide-react";
 
-export const Route = createFileRoute("/care-exceptions")({  
-  beforeLoad: async () => {
-    const session = await auth.getSession();
-    if (!session) {
-      throw new Error("Authentication required");
-    }
-  },
+export const Route = createFileRoute("/care-exceptions")({
+  beforeLoad: requireAuth,
   component: InterventionsPage,
 });
 

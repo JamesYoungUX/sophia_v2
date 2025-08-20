@@ -2,11 +2,19 @@
 /* SPDX-License-Identifier: MIT */
 
 import { LoginForm } from "@repo/ui";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { auth } from "@/lib/auth";
 import { useState } from "react";
 
-export const Route = createFileRoute("/login")({  
+export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    const session = await auth.getSession();
+    if (session?.data?.user) {
+      throw redirect({
+        to: "/",
+      });
+    }
+  },
   component: Login,
 });
 
@@ -35,6 +43,20 @@ function Login() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await auth.signIn.social({
+        provider: "google",
+        callbackURL: window.location.origin + "/", // Redirect to home after login
+      });
+    } catch (error) {
+      console.error("Google login failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -52,7 +74,11 @@ function Login() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <LoginForm onLogin={handleLogin} isLoading={isLoading} />
+            <LoginForm 
+              onLogin={handleLogin} 
+              onGoogleLogin={handleGoogleLogin}
+              isLoading={isLoading} 
+            />
           </div>
         </div>
       </div>

@@ -237,6 +237,20 @@ The project includes several management commands:
 
 ## Executor's Feedback or Assistance Requests
 
+### ✅ RESOLVED: Schema Changes Reverted
+
+**Issue Resolved**: All unauthorized schema changes have been successfully reverted.
+
+**What Was Restored**:
+- `db/schema/user.ts` - restored `uuid_generate_v7()` in user, session, identity, and verification tables
+- `db/schema/organization.ts` - restored `uuid_generate_v7()` in organization and member tables  
+- `db/schema/invitation.ts` - restored `uuid_generate_v7()` in invitation table
+- `db/schema/team.ts` - restored `uuid_generate_v7()` in team and team_member tables
+
+**Current Status**: All schema files are back to their original state using `uuid_generate_v7()` as intended.
+
+**Next Steps**: We need to properly install the `pg_uuidv7` extension on your PostgreSQL installation to support the UUID v7 generation functions used in your schema.
+
 ### Authentication Research Summary ✅ COMPLETED
 I have completed comprehensive research on implementing authentication with Better Auth and Jotai:
 

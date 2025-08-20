@@ -1,17 +1,11 @@
 import { StatsCard } from "@/components/stats-card";
 import { SurgicalTrackingChart } from "@/components/surgical-tracking-chart";
 import { auth } from "@/lib/auth";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/auth-guard";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: async () => {
-    const session = await auth.getSession();
-    if (!session) {
-      throw redirect({
-        to: "/",
-      });
-    }
-  },
+  beforeLoad: requireAuth,
   component: () => {
     const { data: session } = auth.useSession();
     const greeting = (() => {

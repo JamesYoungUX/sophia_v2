@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Protected Route Access</title>
+</head>
+<body>
+    <h1>Test Protected Route Access</h1>
+    <button onclick="testProtectedRoute()">Test /account Route</button>
+    <button onclick="testCareExceptions()">Test /care-exceptions Route</button>
+    <button onclick="checkSession()">Check Session</button>
+    <div id="results"></div>
+
+    <script>
+        const DEBUG_LOG = true;
+        
+        function log(message) {
+            if (DEBUG_LOG) {
+                console.log(message);
+                const results = document.getElementById('results');
+                results.innerHTML += '<p>' + message + '</p>';
+            }
+        }
+        
+        async function testProtectedRoute() {
+            log('Testing /account route...');
+            try {
+                const response = await fetch('http://localhost:5173/account');
+                log('Response status: ' + response.status);
+                log('Response URL: ' + response.url);
+                if (response.redirected) {
+                    log('Was redirected to: ' + response.url);
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+        
+        async function testCareExceptions() {
+            log('Testing /care-exceptions route...');
+            try {
+                const response = await fetch('http://localhost:5173/care-exceptions');
+                log('Response status: ' + response.status);
+                log('Response URL: ' + response.url);
+                if (response.redirected) {
+                    log('Was redirected to: ' + response.url);
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+        
+        async function checkSession() {
+            log('Checking session...');
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/session');
+                const session = await response.json();
+                log('Session data: ' + JSON.stringify(session, null, 2));
+            } catch (error) {
+                log('Error checking session: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

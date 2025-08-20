@@ -11,8 +11,10 @@ import {
   Separator,
 } from "@repo/ui";
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/auth-guard";
 
 export const Route = createFileRoute("/about")({
+  beforeLoad: requireAuth,
   component: About,
 });
 

@@ -17,12 +17,9 @@ import {
 } from "@repo/ui";
 import { useLocation } from "@tanstack/react-router";
 import { StoreProvider } from "@/lib/store";
+import { auth } from "@/lib/auth";
 
-const userData = {
-  name: "Dr. Sarah Johnson",
-  email: "sarah.johnson@sophia.health",
-  avatar: "/avatars/doctor.jpg",
-};
+// Removed hardcoded userData - now using Better Auth session data
 
 // Three-level breadcrumb mapping: route -> { section, group, page }
 const routeToBreadcrumb: Record<string, { section: string; group: string; page: string }> = {
@@ -55,7 +52,15 @@ const routeToBreadcrumb: Record<string, { section: string; group: string; page: 
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { data: session } = auth.useSession();
   const breadcrumbData = routeToBreadcrumb[location.pathname] || { section: "Platform", group: "Unknown", page: "Page" };
+
+  // Only create user data if there's a valid session
+  const userData = session?.user ? {
+    name: session.user.name || 'User',
+    email: session.user.email || '',
+    avatar: session.user.image || '/avatars/default.jpg'
+  } : null;
 
   return (
     <StoreProvider>
@@ -80,9 +85,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="ml-auto">
-              <NavUser user={userData} />
-            </div>
+            {userData && (
+              <div className="ml-auto">
+                <NavUser user={userData} />
+              </div>
+            )}
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
             {children}

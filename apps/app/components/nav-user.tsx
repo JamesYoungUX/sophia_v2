@@ -26,6 +26,9 @@ import {
   useSidebar,
 } from "@repo/ui"
 
+import { auth } from "@/lib/auth"
+import { useNavigate } from "@tanstack/react-router"
+
 export function NavUser({
   user,
 }: {
@@ -36,6 +39,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const navigate = useNavigate()
 
   if (!user) {
     return null
@@ -102,7 +106,19 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={async () => {
+              try {
+                console.log("[LOGOUT] Starting logout process...");
+                await auth.signOut();
+                console.log("[LOGOUT] Logout successful, redirecting to login...");
+                // Force navigation to login after logout
+                window.location.href = "/login";
+              } catch (error) {
+                console.error("[LOGOUT] Logout failed:", error);
+                // Still redirect to login even if logout fails
+                window.location.href = "/login";
+              }
+            }}>
               <LogOut />
               Log out
             </DropdownMenuItem>

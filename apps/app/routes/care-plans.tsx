@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@repo/ui/components/table";
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/auth-guard";
 
 // Placeholder data for demonstration
 const blueprintPlans = [
@@ -156,6 +157,7 @@ function CarePlanTable({
 }
 
 export const Route = createFileRoute("/care-plans")({
+  beforeLoad: requireAuth,
   component: () => (
     <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">
       <h1 className="text-3xl font-bold mb-4">Care Plans Library</h1>

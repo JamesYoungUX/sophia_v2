@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2014-present Kriasoft */
 /* SPDX-License-Identifier: MIT */
 
-import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useLocation, redirect } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Layout } from "@/components/layout";
 import { StoreProvider } from "@/lib/store";
+import { auth } from "@/lib/auth";
 
 export const Route = createRootRoute({
   component: Root,

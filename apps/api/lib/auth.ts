@@ -60,6 +60,8 @@ export function createAuth(
       },
     }),
 
+    trustedOrigins: ["http://localhost:5173", "http://localhost:8787"],
+
     account: {
       modelName: "identity",
     },
@@ -78,7 +80,7 @@ export function createAuth(
     },
 
     plugins: [
-      anonymous(),
+      // anonymous(), // Disabled to prevent automatic anonymous sessions
       organization({
         allowUserToCreateOrganization: true,
         organizationLimit: 5,
