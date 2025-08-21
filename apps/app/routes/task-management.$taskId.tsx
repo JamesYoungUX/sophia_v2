@@ -269,10 +269,6 @@ function TaskDetailsPage() {
                   {task.versionStatus ? <VersionStatusBadge versionStatus={task.versionStatus} /> : <span>- unavailable</span>}
                 </div>
               </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Template</Label>
-                <p className="mt-1">{task.isTemplate !== undefined ? (task.isTemplate ? 'Yes' : 'No') : '- unavailable'}</p>
-              </div>
             </CardContent>
           </Card>
 
