@@ -15,7 +15,7 @@ export const Route = createFileRoute("/care-exceptions")({
 });
 
 // Debug logging flag for this module; disable when feature is verified
-const DEBUG_LOG = true;
+const DEBUG_LOG = false;
 
 // Lightweight humanized time using Intl.RelativeTimeFormat to avoid extra deps
 function humanizeTime(input?: string | Date | null): string {
@@ -87,22 +87,31 @@ function InterventionsPage() {
     {
       refetchOnWindowFocus: false,
       retry: 1,
-      onSuccess: (res) => {
-        if (DEBUG_LOG)
-          console.log("[CareExceptions] query success", {
-            escalatedOnly,
-            count: res?.length ?? 0,
-          });
-      },
-      onError: (err) => {
-        if (DEBUG_LOG)
-          console.error("[CareExceptions] query error", {
-            escalatedOnly,
-            err,
-          });
-      },
     }
   );
+
+  // Log success data and verify humanized timestamps on small sample when data changes
+  React.useEffect(() => {
+    if (!DEBUG_LOG) return;
+    const count = (data as any[])?.length ?? 0;
+    console.log("[CareExceptions] query success", { escalatedOnly, count });
+    if (Array.isArray(data) && data.length > 0) {
+      const sample = (data as any[]).slice(0, 3).map((r: any) => ({
+        id: r.id,
+        firstDetectedAt: r.firstDetectedAt ?? null,
+        firstDetectedAt_h: humanizeTime(r.firstDetectedAt ?? null),
+        lastDetectedAt: r.lastDetectedAt ?? null,
+        lastDetectedAt_h: humanizeTime(r.lastDetectedAt ?? null),
+      }));
+      console.debug("[CareExceptions] timestamp sample (first 3)", sample);
+    }
+  }, [data, escalatedOnly]);
+
+  // Log query error state changes
+  React.useEffect(() => {
+    if (!DEBUG_LOG || !isError) return;
+    console.error("[CareExceptions] query error", { escalatedOnly, err: error });
+  }, [isError, error, escalatedOnly]);
 
   const rows = data ?? [];
   if (DEBUG_LOG)
