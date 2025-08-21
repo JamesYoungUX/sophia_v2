@@ -71,7 +71,7 @@ export default defineProject(({ mode }) => {
         routeFileIgnorePrefix: "-",
         quoteStyle: "single",
         semicolons: false,
-        autoCodeSplitting: true,
+        autoCodeSplitting: false,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as any,
       // https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react-swc

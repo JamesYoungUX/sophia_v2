@@ -25,9 +25,6 @@ export function Root() {
   }
 
   return (
-    <Layout>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </Layout>
+    <Layout />
   );
 }

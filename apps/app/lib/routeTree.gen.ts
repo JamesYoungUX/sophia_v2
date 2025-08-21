@@ -21,6 +21,8 @@ import { Route as CareExceptionsRouteImport } from './../routes/care-exceptions'
 import { Route as AccountRouteImport } from './../routes/account'
 import { Route as AboutRouteImport } from './../routes/about'
 import { Route as IndexRouteImport } from './../routes/index'
+import { Route as TaskManagementIndexRouteImport } from './../routes/task-management.index'
+import { Route as TaskManagementTaskIdRouteImport } from './../routes/task-management.$taskId'
 import { Route as PrdsSurgicalPlanRouteImport } from './../routes/prds.surgical-plan'
 import { Route as PrdsSophiaPatientEngagementRouteImport } from './../routes/prds.sophia-patient-engagement'
 import { Route as PrdsGenesisAgentRouteImport } from './../routes/prds.genesis-agent'
@@ -89,6 +91,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TaskManagementIndexRoute = TaskManagementIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TaskManagementRoute,
+} as any)
+const TaskManagementTaskIdRoute = TaskManagementTaskIdRouteImport.update({
+  id: '/$taskId',
+  path: '/$taskId',
+  getParentRoute: () => TaskManagementRoute,
+} as any)
 const PrdsSurgicalPlanRoute = PrdsSurgicalPlanRouteImport.update({
   id: '/prds/surgical-plan',
   path: '/prds/surgical-plan',
@@ -137,7 +149,7 @@ export interface FileRoutesByFullPath {
   '/organization': typeof OrganizationRoute
   '/patient-pool': typeof PatientPoolRoute
   '/surgical-plan-view': typeof SurgicalPlanViewRoute
-  '/task-management': typeof TaskManagementRoute
+  '/task-management': typeof TaskManagementRouteWithChildren
   '/team-plans': typeof TeamPlansRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
@@ -146,6 +158,8 @@ export interface FileRoutesByFullPath {
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
+  '/task-management/$taskId': typeof TaskManagementTaskIdRoute
+  '/task-management/': typeof TaskManagementIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,7 +172,6 @@ export interface FileRoutesByTo {
   '/organization': typeof OrganizationRoute
   '/patient-pool': typeof PatientPoolRoute
   '/surgical-plan-view': typeof SurgicalPlanViewRoute
-  '/task-management': typeof TaskManagementRoute
   '/team-plans': typeof TeamPlansRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
@@ -167,6 +180,8 @@ export interface FileRoutesByTo {
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
+  '/task-management/$taskId': typeof TaskManagementTaskIdRoute
+  '/task-management': typeof TaskManagementIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -180,7 +195,7 @@ export interface FileRoutesById {
   '/organization': typeof OrganizationRoute
   '/patient-pool': typeof PatientPoolRoute
   '/surgical-plan-view': typeof SurgicalPlanViewRoute
-  '/task-management': typeof TaskManagementRoute
+  '/task-management': typeof TaskManagementRouteWithChildren
   '/team-plans': typeof TeamPlansRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
@@ -189,6 +204,8 @@ export interface FileRoutesById {
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
+  '/task-management/$taskId': typeof TaskManagementTaskIdRoute
+  '/task-management/': typeof TaskManagementIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -212,6 +229,8 @@ export interface FileRouteTypes {
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
+    | '/task-management/$taskId'
+    | '/task-management/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -224,7 +243,6 @@ export interface FileRouteTypes {
     | '/organization'
     | '/patient-pool'
     | '/surgical-plan-view'
-    | '/task-management'
     | '/team-plans'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
@@ -233,6 +251,8 @@ export interface FileRouteTypes {
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
+    | '/task-management/$taskId'
+    | '/task-management'
   id:
     | '__root__'
     | '/'
@@ -254,6 +274,8 @@ export interface FileRouteTypes {
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
+    | '/task-management/$taskId'
+    | '/task-management/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -267,7 +289,7 @@ export interface RootRouteChildren {
   OrganizationRoute: typeof OrganizationRoute
   PatientPoolRoute: typeof PatientPoolRoute
   SurgicalPlanViewRoute: typeof SurgicalPlanViewRoute
-  TaskManagementRoute: typeof TaskManagementRoute
+  TaskManagementRoute: typeof TaskManagementRouteWithChildren
   TeamPlansRoute: typeof TeamPlansRoute
   AgentsComplianceAgentRoute: typeof AgentsComplianceAgentRoute
   AgentsGenesisAgentRoute: typeof AgentsGenesisAgentRoute
@@ -364,6 +386,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/task-management/': {
+      id: '/task-management/'
+      path: '/'
+      fullPath: '/task-management/'
+      preLoaderRoute: typeof TaskManagementIndexRouteImport
+      parentRoute: typeof TaskManagementRoute
+    }
+    '/task-management/$taskId': {
+      id: '/task-management/$taskId'
+      path: '/$taskId'
+      fullPath: '/task-management/$taskId'
+      preLoaderRoute: typeof TaskManagementTaskIdRouteImport
+      parentRoute: typeof TaskManagementRoute
+    }
     '/prds/surgical-plan': {
       id: '/prds/surgical-plan'
       path: '/prds/surgical-plan'
@@ -416,6 +452,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface TaskManagementRouteChildren {
+  TaskManagementTaskIdRoute: typeof TaskManagementTaskIdRoute
+  TaskManagementIndexRoute: typeof TaskManagementIndexRoute
+}
+
+const TaskManagementRouteChildren: TaskManagementRouteChildren = {
+  TaskManagementTaskIdRoute: TaskManagementTaskIdRoute,
+  TaskManagementIndexRoute: TaskManagementIndexRoute,
+}
+
+const TaskManagementRouteWithChildren = TaskManagementRoute._addFileChildren(
+  TaskManagementRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -427,7 +477,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrganizationRoute: OrganizationRoute,
   PatientPoolRoute: PatientPoolRoute,
   SurgicalPlanViewRoute: SurgicalPlanViewRoute,
-  TaskManagementRoute: TaskManagementRoute,
+  TaskManagementRoute: TaskManagementRouteWithChildren,
   TeamPlansRoute: TeamPlansRoute,
   AgentsComplianceAgentRoute: AgentsComplianceAgentRoute,
   AgentsGenesisAgentRoute: AgentsGenesisAgentRoute,

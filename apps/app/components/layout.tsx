@@ -15,7 +15,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@repo/ui";
-import { useLocation } from "@tanstack/react-router";
+import { useLocation, Outlet } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { StoreProvider } from "@/lib/store";
 import { auth } from "@/lib/auth";
 
@@ -51,12 +52,22 @@ const routeToBreadcrumb: Record<string, { section: string; group: string; page: 
   "/prds/surgical-plan": { section: "Platform", group: "PRDs", page: "Surgical Plan PRD" },
   "/prds/sophia-patient-engagement": { section: "Platform", group: "PRDs", page: "Sophia Patient Engagement PRD" },
   "/prds/genesis-agent": { section: "Platform", group: "PRDs", page: "Genesis Agent PRD" },
+  "/task-management": { section: "Platform", group: "Console", page: "Task Management" },
 };
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout() {
   const location = useLocation();
   const { data: session } = auth.useSession();
-  const breadcrumbData = routeToBreadcrumb[location.pathname] || { section: "Platform", group: "Unknown", page: "Page" };
+  
+  // Handle dynamic routes like /task-management/$taskId
+  let breadcrumbData = routeToBreadcrumb[location.pathname];
+  if (!breadcrumbData) {
+    if (location.pathname.startsWith('/task-management/')) {
+      breadcrumbData = { section: "Platform", group: "Console", page: "Task Details" };
+    } else {
+      breadcrumbData = { section: "Platform", group: "Unknown", page: "Page" };
+    }
+  }
 
   // Only create user data if there's a valid session
   const userData = session?.user ? {
@@ -95,10 +106,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4">
-            {children}
+            <Outlet />
           </div>
         </SidebarInset>
       </SidebarProvider>
+      <TanStackRouterDevtools />
     </StoreProvider>
   );
 }

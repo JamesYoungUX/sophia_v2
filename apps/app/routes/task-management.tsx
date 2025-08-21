@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { TaskManagementRepository } from '../components/task-management-repository';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
+
+const DEBUG_LOG = false;
 
 export const Route = createFileRoute('/task-management')(
   {
@@ -9,8 +10,8 @@ export const Route = createFileRoute('/task-management')(
 
 function TaskManagementPage() {
   return (
-    <div className="container mx-auto py-6">
-      <TaskManagementRepository />
+    <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">
+      <Outlet />
     </div>
   );
 }
