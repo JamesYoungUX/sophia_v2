@@ -121,6 +121,8 @@ app.route("/", api);
  */
 console.log(`[DEV] API server configured for port 8787`);
 
+
+// Remove explicit Bun.serve to avoid double-start; rely on Bun auto-serve
 export default {
   port: 8787,
   fetch: app.fetch,

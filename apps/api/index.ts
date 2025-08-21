@@ -17,13 +17,75 @@ import { patientRouter } from "./routers/patient.js";
 import { userRouter } from "./routers/user.js";
 import { careExceptionRouter } from "./routers/care-exception.js";
 
+// DEBUG flag for startup instrumentation
+const DEBUG_LOG = true;
+if (DEBUG_LOG) {
+  try {
+    const cePre = Object.keys(((careExceptionRouter as any)?._def?.record) ?? {});
+    const ptPre = Object.keys(((patientRouter as any)?._def?.record) ?? {});
+    const orgPre = Object.keys(((organizationRouter as any)?._def?.record) ?? {});
+    const userPre = Object.keys(((userRouter as any)?._def?.record) ?? {});
+    console.log("[DEBUG] PRE appRouter compose - careExceptionRouter keys:", cePre);
+    console.log("[DEBUG] PRE appRouter compose - patientRouter keys:", ptPre);
+    console.log("[DEBUG] PRE appRouter compose - organizationRouter keys:", orgPre);
+    console.log("[DEBUG] PRE appRouter compose - userRouter keys:", userPre);
+  } catch (e) {
+    console.log("[DEBUG] PRE appRouter compose: error while reading child keys", e);
+  }
+}
+
 // tRPC API router
 const appRouter = router({
   user: userRouter,
   organization: organizationRouter,
   patient: patientRouter,
   careException: careExceptionRouter,
+  // TEMP: alias to test routing under alternate key
+  careExceptions: careExceptionRouter,
 });
+
+// DEBUG: Enumerate router keys at startup to confirm runtime composition
+if (DEBUG_LOG) {
+  try {
+    const routerKeys = Object.keys((appRouter as any)?._def?.record ?? {});
+    console.log("[DEBUG] appRouter keys:", routerKeys);
+    console.log("[DEBUG] tRPC mounted at:", "/api/trpc");
+
+    const readChildKeys = (label: string, node: any) => {
+      const hasRecord = !!node?._def && !!(node as any)?._def?.record;
+      const keys = hasRecord ? Object.keys((node as any)?._def?.record ?? {}) : [];
+      console.log(`[DEBUG] POST compose - ${label} hasRecord=${hasRecord} keys=`, keys);
+    };
+
+    readChildKeys("patient", (appRouter as any)?._def?.record?.patient);
+    readChildKeys("organization", (appRouter as any)?._def?.record?.organization);
+    readChildKeys("user", (appRouter as any)?._def?.record?.user);
+    readChildKeys("careException", (appRouter as any)?._def?.record?.careException);
+    readChildKeys("careExceptions (alias)", (appRouter as any)?._def?.record?.careExceptions);
+
+    // Optional: enumerate full procedure paths
+    const collectPaths = (node: any, prefix = ""): string[] => {
+      if (!node?._def) return [];
+      const record = (node as any)?._def?.record ?? {};
+      const keys = Object.keys(record);
+      const paths: string[] = [];
+      for (const k of keys) {
+        const child = record[k];
+        const isRouter = !!child?._def?.record;
+        if (isRouter) {
+          paths.push(...collectPaths(child, prefix ? `${prefix}.${k}` : k));
+        } else {
+          paths.push(prefix ? `${prefix}.${k}` : k);
+        }
+      }
+      return paths;
+    };
+    const allPaths = collectPaths(appRouter as any);
+    console.log("[DEBUG] tRPC procedure paths:", allPaths);
+  } catch (err) {
+    console.error("[DEBUG] Failed to enumerate appRouter keys:", err);
+  }
+}
 
 // HTTP router
 const app = new Hono<AppContext>();

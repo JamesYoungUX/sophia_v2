@@ -19,6 +19,13 @@ const EscalatedByAgentEnum = z.enum([
 ]);
 
 export const careExceptionRouter = router({
+  // Temporary ping endpoint to validate router path resolution; remove after debugging
+  ping: publicProcedure.query(() => {
+    const now = new Date().toISOString();
+    // Minimal payload to confirm server reachability and router wiring
+    return { ok: true, ts: now, router: "careException" };
+  }),
+
   list: publicProcedure
     .input(
       z
@@ -172,3 +179,11 @@ export const careExceptionRouter = router({
       return row;
     }),
 });
+
+// DEBUG: log router child keys on init
+try {
+  const keys = Object.keys((careExceptionRouter as any)?._def?.record ?? {});
+  console.log("[DEBUG] careExceptionRouter init child keys:", keys);
+} catch (e) {
+  console.log("[DEBUG] careExceptionRouter init: failed to read keys", e);
+}

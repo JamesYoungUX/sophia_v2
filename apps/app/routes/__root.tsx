@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: MIT */
 
 import { createRootRoute, Outlet, useLocation, redirect } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Layout } from "@/components/layout";
 import { StoreProvider } from "@/lib/store";
 import { auth } from "@/lib/auth";
