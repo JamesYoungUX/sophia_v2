@@ -180,7 +180,7 @@ const data = {
       items: [
         {
           title: "Surgical Plan PRD",
-          url: "/prds/med-plan",
+          url: "/prds/surgical-plan",
         },
       ],
     },

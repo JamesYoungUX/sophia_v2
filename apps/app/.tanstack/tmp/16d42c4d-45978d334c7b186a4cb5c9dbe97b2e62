@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui'
 
-export const Route = createFileRoute('/prds/med-plan')({
+export const Route = createFileRoute('/prds/surgical-plan')({
   component: SurgicalPlanPRD,
 })
 
