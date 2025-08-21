@@ -5,6 +5,7 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { publicProcedure, router } from "../lib/trpc.js";
 import { careException } from "@repo/db/schema/care-exception";
+import { patient } from "@repo/db/schema/patient";
 
 // Enums enforced at API layer; DB stores as text for flexibility
 const SeverityEnum = z.enum(["low", "medium", "high"]);
@@ -49,10 +50,37 @@ export const careExceptionRouter = router({
       if (severity) conditions.push(eq(careException.severity, severity));
       if (escalatedOnly) conditions.push(eq(careException.escalated, true));
 
-      const sel = ctx.db.select().from(careException);
-      const rows = await (conditions.length ? sel.where(and(...conditions)) : sel)
+      // Build select with LEFT JOIN to patient, projecting required fields explicitly
+      const base = ctx.db
+        .select({
+          id: careException.id,
+          patientId: careException.patientId,
+          type: careException.type,
+          severity: careException.severity,
+          status: careException.status,
+          firstDetectedAt: careException.firstDetectedAt,
+          lastDetectedAt: careException.lastDetectedAt,
+          resolvedAt: careException.resolvedAt,
+          escalated: careException.escalated,
+          escalatedAt: careException.escalatedAt,
+          escalatedByType: careException.escalatedByType,
+          escalatedByAgent: careException.escalatedByAgent,
+          escalationReason: careException.escalationReason,
+          note: careException.note,
+          createdAt: careException.createdAt,
+          updatedAt: careException.updatedAt,
+          // Joined patient fields
+          patientLastName: patient.patLastName,
+          patientFirstName: patient.patFirstName,
+          patientMrnId: patient.patMrnId,
+        })
+        .from(careException)
+        .leftJoin(patient, eq(patient.patId, careException.patientId));
+
+      const rows = await (conditions.length ? base.where(and(...conditions)) : base)
         .limit(limit)
         .offset(offset);
+
       return rows;
     }),
 

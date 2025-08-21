@@ -223,7 +223,7 @@ function InterventionsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Patient ID</TableHead>
+                <TableHead>Patient</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Severity</TableHead>
                 <TableHead>Status</TableHead>
@@ -250,8 +250,21 @@ function InterventionsPage() {
                   <TableRow key={item.id}>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium">{item.patientId}</span>
-                        <span className="text-xs text-muted-foreground">ID: {item.id}</span>
+                        {/* Top line: Lastname, First name; fallback to patientId if both names missing */}
+                        <span className="font-medium">
+                          {(() => {
+                            const lastName = (item.patientLastName ?? "").trim();
+                            const firstName = (item.patientFirstName ?? "").trim();
+                            if (lastName || firstName) {
+                              return `${lastName}${lastName && firstName ? ", " : ""}${firstName}`;
+                            }
+                            return item.patientId;
+                          })()}
+                        </span>
+                        {/* Second line: PID and MRN with fallback */}
+                        <span className="text-xs text-muted-foreground">
+                          PID: {item.patientId} • MRN: {item.patientMrnId ?? "abc"}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs">
