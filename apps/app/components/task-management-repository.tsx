@@ -51,7 +51,24 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/trpc';
 
-const DEBUG_LOG = true;
+const DEBUG_LOG = false;
+
+// Helper function to safely format dates
+const formatDate = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) {
+      if (DEBUG_LOG) console.warn('Invalid date encountered:', date);
+      return 'Invalid Date';
+    }
+    return dateObj.toLocaleDateString();
+  } catch (error) {
+    if (DEBUG_LOG) console.error('Error formatting date:', error, date);
+    return 'Error';
+  }
+};
 
 // Types based on our task management system
 interface TaskSpecification {
@@ -452,7 +469,7 @@ function TaskList({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-gray-500">
-                  {task.updatedAt.toLocaleDateString()}
+                  {formatDate(task.updatedAt)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-1">
