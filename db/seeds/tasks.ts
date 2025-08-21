@@ -34,7 +34,6 @@ const sampleTasks: TaskInsert[] = [
     priority: 'high',
     versionStatus: 'active',
     version: '1.0.0',
-    isTemplate: true,
     
     // Required fields - will be set by the seeding function
     organizationId: '', // Will be filled in
@@ -67,7 +66,6 @@ const sampleTasks: TaskInsert[] = [
     priority: 'medium',
     versionStatus: 'draft',
     version: '0.1.0',
-    isTemplate: false,
     
     organizationId: '',
     createdBy: '',
@@ -98,7 +96,6 @@ const sampleTasks: TaskInsert[] = [
     priority: 'high',
     versionStatus: 'active',
     version: '2.1.0',
-    isTemplate: true,
     
     organizationId: '',
     createdBy: '',
