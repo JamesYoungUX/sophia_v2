@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { requireAuth } from '@/lib/auth-guard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui'
 
 export const Route = createFileRoute('/prds/surgical-plan')({
+  beforeLoad: requireAuth,
   component: SurgicalPlanPRD,
 })
 
