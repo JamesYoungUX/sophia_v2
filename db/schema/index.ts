@@ -7,6 +7,8 @@ import * as patient from "./patient";
 import * as team from "./team";
 import * as user from "./user";
 import * as careException from "./care-exception";
+import * as carePlan from "./care-plan";
+import * as taskManagement from "./task-management";
 
 export const schema = {
   ...invitation,
@@ -15,6 +17,8 @@ export const schema = {
   ...team,
   ...user,
   ...careException,
+  ...carePlan,
+  ...taskManagement,
 } as const;
 
 export type DbSchema = typeof schema;
