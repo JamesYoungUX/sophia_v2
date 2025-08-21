@@ -270,13 +270,13 @@ function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) {
               </div>
               
               <div>
-                <Label htmlFor="version-status-filter">Version Status</Label>
+                <Label htmlFor="version-status-filter">Status</Label>
                 <Select value={filters.versionStatus || ''} onValueChange={(value) => handleFilterChange('versionStatus', value || undefined)}>
                   <SelectTrigger id="version-status-filter">
-                    <SelectValue placeholder="All versions" />
+                    <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All versions</SelectItem>
+                    <SelectItem value="">All statuses</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
@@ -333,9 +333,9 @@ function TaskList({
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Priority</TableHead>
-              <TableHead>Version Status</TableHead>
               <TableHead>Version</TableHead>
               <TableHead>Updated</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -352,12 +352,12 @@ function TaskList({
                 </TableCell>
                 <TableCell>{task.category}</TableCell>
                 <TableCell>{task.priority}</TableCell>
-                <TableCell>
-                  <VersionStatusBadge versionStatus={task.versionStatus} />
-                </TableCell>
                 <TableCell className="font-mono text-sm">{task.version}</TableCell>
                 <TableCell className="text-sm text-gray-500">
                   {formatDate(task.updatedAt)}
+                </TableCell>
+                <TableCell>
+                  <VersionStatusBadge versionStatus={task.versionStatus} />
                 </TableCell>
               </TableRow>
             ))}
