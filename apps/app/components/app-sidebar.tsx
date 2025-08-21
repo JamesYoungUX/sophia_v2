@@ -179,7 +179,7 @@ const data = {
       icon: BookOpen,
       items: [
         {
-          title: "Med Plan PRD",
+          title: "Surgical Plan PRD",
           url: "/prds/med-plan",
         },
       ],

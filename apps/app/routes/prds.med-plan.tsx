@@ -2,16 +2,16 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui'
 
 export const Route = createFileRoute('/prds/med-plan')({
-  component: MedPlanPRD,
+  component: SurgicalPlanPRD,
 })
 
-function MedPlanPRD() {
+function SurgicalPlanPRD() {
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Med Plan PRD</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Surgical Plan PRD</h1>
         <p className="text-muted-foreground">
-          Product Requirements Document for Medical Plan Management
+          Product Requirements Document for Surgical Plan Management
         </p>
       </div>
 
@@ -21,15 +21,15 @@ function MedPlanPRD() {
           <CardHeader>
             <CardTitle>Overview</CardTitle>
             <CardDescription>
-              High-level summary of the medical plan management feature
+              High-level summary of the surgical plan management feature
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <h4 className="font-semibold mb-2">Purpose</h4>
               <p className="text-sm text-muted-foreground">
-                Enable healthcare providers to create, manage, and track comprehensive medical plans for patients,
-                ensuring coordinated care delivery and improved patient outcomes.
+                Enable healthcare providers to create, manage, and track comprehensive surgical plans for patients,
+                ensuring coordinated surgical care delivery and improved patient outcomes.
               </p>
             </div>
             <div>
@@ -49,7 +49,7 @@ function MedPlanPRD() {
           <CardHeader>
             <CardTitle>Functional Requirements</CardTitle>
             <CardDescription>
-              Core functionality and features for medical plan management
+              Core functionality and features for surgical plan management
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -57,28 +57,28 @@ function MedPlanPRD() {
               <div>
                 <h4 className="font-semibold mb-2">Plan Creation</h4>
                 <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                  <li>Create new medical plans with patient demographics</li>
-                  <li>Define treatment goals and objectives</li>
-                  <li>Set plan duration and review schedules</li>
-                  <li>Assign care team members and responsibilities</li>
+                  <li>Create new surgical plans with patient demographics</li>
+                  <li>Define surgical goals and objectives</li>
+                  <li>Set pre-operative and post-operative schedules</li>
+                  <li>Assign surgical team members and responsibilities</li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Plan Management</h4>
                 <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                  <li>Edit and update existing plans</li>
-                  <li>Track plan progress and milestones</li>
-                  <li>Document plan modifications and rationale</li>
-                  <li>Archive completed or discontinued plans</li>
+                  <li>Edit and update existing surgical plans</li>
+                  <li>Track surgical progress and milestones</li>
+                  <li>Document surgical plan modifications and rationale</li>
+                  <li>Archive completed or cancelled surgical plans</li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Collaboration</h4>
                 <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                  <li>Share plans with care team members</li>
-                  <li>Enable collaborative editing and comments</li>
-                  <li>Notify stakeholders of plan updates</li>
-                  <li>Maintain audit trail of all changes</li>
+                  <li>Share surgical plans with surgical team members</li>
+                  <li>Enable collaborative editing and surgical notes</li>
+                  <li>Notify surgical stakeholders of plan updates</li>
+                  <li>Maintain audit trail of all surgical plan changes</li>
                 </ul>
               </div>
             </div>
