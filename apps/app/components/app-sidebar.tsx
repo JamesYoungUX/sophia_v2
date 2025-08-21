@@ -83,16 +83,20 @@ const data = {
           url: "/care-plans",
         },
         {
-          title: "Clinical Support",
-          url: "/clinical-support",
+          title: "Task Management",
+          url: "/task-management",
         },
         {
-          title: "Patient Records",
-          url: "/patients",
+          title: "Organization",
+          url: "/organization",
         },
         {
-          title: "Appointments",
-          url: "/appointments",
+          title: "Team Plans",
+          url: "/team-plans",
+        },
+        {
+          title: "My Plans",
+          url: "/my-plans",
         },
       ],
     },

@@ -16,6 +16,8 @@ import { organizationRouter } from "./routers/organization.js";
 import { patientRouter } from "./routers/patient.js";
 import { userRouter } from "./routers/user.js";
 import { careExceptionRouter } from "./routers/care-exception.js";
+import { carePlanRouter } from "./routers/care-plan.js";
+import { taskRouter } from "./routers/task.js";
 
 // DEBUG flag for startup instrumentation
 const DEBUG_LOG = true;
@@ -40,6 +42,8 @@ const appRouter = router({
   organization: organizationRouter,
   patient: patientRouter,
   careException: careExceptionRouter,
+  carePlan: carePlanRouter,
+  task: taskRouter,
   // TEMP: alias to test routing under alternate key
   careExceptions: careExceptionRouter,
 });

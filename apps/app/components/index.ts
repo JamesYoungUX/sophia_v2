@@ -4,3 +4,5 @@
 export * from "./error";
 export * from "./stats-card";
 export * from "./surgical-tracking-chart";
+export * from "./task-management-repository";
+export * from "./task-editor";

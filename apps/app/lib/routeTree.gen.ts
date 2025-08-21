@@ -9,7 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './../routes/__root'
+import { Route as TeamPlansRouteImport } from './../routes/team-plans'
+import { Route as TaskManagementRouteImport } from './../routes/task-management'
+import { Route as SurgicalPlanViewRouteImport } from './../routes/surgical-plan-view'
 import { Route as PatientPoolRouteImport } from './../routes/patient-pool'
+import { Route as OrganizationRouteImport } from './../routes/organization'
+import { Route as MyPlansRouteImport } from './../routes/my-plans'
 import { Route as LoginRouteImport } from './../routes/login'
 import { Route as CarePlansRouteImport } from './../routes/care-plans'
 import { Route as CareExceptionsRouteImport } from './../routes/care-exceptions'
@@ -24,9 +29,34 @@ import { Route as AgentsPatientEngagementRouteImport } from './../routes/agents.
 import { Route as AgentsGenesisAgentRouteImport } from './../routes/agents.genesis-agent'
 import { Route as AgentsComplianceAgentRouteImport } from './../routes/agents.compliance-agent'
 
+const TeamPlansRoute = TeamPlansRouteImport.update({
+  id: '/team-plans',
+  path: '/team-plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TaskManagementRoute = TaskManagementRouteImport.update({
+  id: '/task-management',
+  path: '/task-management',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurgicalPlanViewRoute = SurgicalPlanViewRouteImport.update({
+  id: '/surgical-plan-view',
+  path: '/surgical-plan-view',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PatientPoolRoute = PatientPoolRouteImport.update({
   id: '/patient-pool',
   path: '/patient-pool',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationRoute = OrganizationRouteImport.update({
+  id: '/organization',
+  path: '/organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPlansRoute = MyPlansRouteImport.update({
+  id: '/my-plans',
+  path: '/my-plans',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -103,7 +133,12 @@ export interface FileRoutesByFullPath {
   '/care-exceptions': typeof CareExceptionsRoute
   '/care-plans': typeof CarePlansRoute
   '/login': typeof LoginRoute
+  '/my-plans': typeof MyPlansRoute
+  '/organization': typeof OrganizationRoute
   '/patient-pool': typeof PatientPoolRoute
+  '/surgical-plan-view': typeof SurgicalPlanViewRoute
+  '/task-management': typeof TaskManagementRoute
+  '/team-plans': typeof TeamPlansRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
@@ -119,7 +154,12 @@ export interface FileRoutesByTo {
   '/care-exceptions': typeof CareExceptionsRoute
   '/care-plans': typeof CarePlansRoute
   '/login': typeof LoginRoute
+  '/my-plans': typeof MyPlansRoute
+  '/organization': typeof OrganizationRoute
   '/patient-pool': typeof PatientPoolRoute
+  '/surgical-plan-view': typeof SurgicalPlanViewRoute
+  '/task-management': typeof TaskManagementRoute
+  '/team-plans': typeof TeamPlansRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
@@ -136,7 +176,12 @@ export interface FileRoutesById {
   '/care-exceptions': typeof CareExceptionsRoute
   '/care-plans': typeof CarePlansRoute
   '/login': typeof LoginRoute
+  '/my-plans': typeof MyPlansRoute
+  '/organization': typeof OrganizationRoute
   '/patient-pool': typeof PatientPoolRoute
+  '/surgical-plan-view': typeof SurgicalPlanViewRoute
+  '/task-management': typeof TaskManagementRoute
+  '/team-plans': typeof TeamPlansRoute
   '/agents/compliance-agent': typeof AgentsComplianceAgentRoute
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
@@ -154,7 +199,12 @@ export interface FileRouteTypes {
     | '/care-exceptions'
     | '/care-plans'
     | '/login'
+    | '/my-plans'
+    | '/organization'
     | '/patient-pool'
+    | '/surgical-plan-view'
+    | '/task-management'
+    | '/team-plans'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
@@ -170,7 +220,12 @@ export interface FileRouteTypes {
     | '/care-exceptions'
     | '/care-plans'
     | '/login'
+    | '/my-plans'
+    | '/organization'
     | '/patient-pool'
+    | '/surgical-plan-view'
+    | '/task-management'
+    | '/team-plans'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
@@ -186,7 +241,12 @@ export interface FileRouteTypes {
     | '/care-exceptions'
     | '/care-plans'
     | '/login'
+    | '/my-plans'
+    | '/organization'
     | '/patient-pool'
+    | '/surgical-plan-view'
+    | '/task-management'
+    | '/team-plans'
     | '/agents/compliance-agent'
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
@@ -203,7 +263,12 @@ export interface RootRouteChildren {
   CareExceptionsRoute: typeof CareExceptionsRoute
   CarePlansRoute: typeof CarePlansRoute
   LoginRoute: typeof LoginRoute
+  MyPlansRoute: typeof MyPlansRoute
+  OrganizationRoute: typeof OrganizationRoute
   PatientPoolRoute: typeof PatientPoolRoute
+  SurgicalPlanViewRoute: typeof SurgicalPlanViewRoute
+  TaskManagementRoute: typeof TaskManagementRoute
+  TeamPlansRoute: typeof TeamPlansRoute
   AgentsComplianceAgentRoute: typeof AgentsComplianceAgentRoute
   AgentsGenesisAgentRoute: typeof AgentsGenesisAgentRoute
   AgentsPatientEngagementRoute: typeof AgentsPatientEngagementRoute
@@ -215,11 +280,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/team-plans': {
+      id: '/team-plans'
+      path: '/team-plans'
+      fullPath: '/team-plans'
+      preLoaderRoute: typeof TeamPlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/task-management': {
+      id: '/task-management'
+      path: '/task-management'
+      fullPath: '/task-management'
+      preLoaderRoute: typeof TaskManagementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/surgical-plan-view': {
+      id: '/surgical-plan-view'
+      path: '/surgical-plan-view'
+      fullPath: '/surgical-plan-view'
+      preLoaderRoute: typeof SurgicalPlanViewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/patient-pool': {
       id: '/patient-pool'
       path: '/patient-pool'
       fullPath: '/patient-pool'
       preLoaderRoute: typeof PatientPoolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organization': {
+      id: '/organization'
+      path: '/organization'
+      fullPath: '/organization'
+      preLoaderRoute: typeof OrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-plans': {
+      id: '/my-plans'
+      path: '/my-plans'
+      fullPath: '/my-plans'
+      preLoaderRoute: typeof MyPlansRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -323,7 +423,12 @@ const rootRouteChildren: RootRouteChildren = {
   CareExceptionsRoute: CareExceptionsRoute,
   CarePlansRoute: CarePlansRoute,
   LoginRoute: LoginRoute,
+  MyPlansRoute: MyPlansRoute,
+  OrganizationRoute: OrganizationRoute,
   PatientPoolRoute: PatientPoolRoute,
+  SurgicalPlanViewRoute: SurgicalPlanViewRoute,
+  TaskManagementRoute: TaskManagementRoute,
+  TeamPlansRoute: TeamPlansRoute,
   AgentsComplianceAgentRoute: AgentsComplianceAgentRoute,
   AgentsGenesisAgentRoute: AgentsGenesisAgentRoute,
   AgentsPatientEngagementRoute: AgentsPatientEngagementRoute,
