@@ -249,6 +249,9 @@ Once the migration path and commit strategy are confirmed, I will:
   - [x] Sample matched rows to confirm patient fields
   - [x] Verify API server returns correct data structure to frontend
   - [x] Confirm API-Frontend data flow is working correctly
+- PRDs Documentation - COMPLETED
+  - [x] Added PRDs section to sidebar navigation
+  - [x] Created Med Plan PRD page with comprehensive content
 
 ## Executor's Feedback or Assistance Requests (Next Step)
 
@@ -266,6 +269,72 @@ Once the migration path and commit strategy are confirmed, I will:
 - Add basic tests for new functionality
 
 The diagnostic phase revealed that the API-Frontend data flow is already working correctly, so the frontend wiring should be straightforward.
+
+## NEW REQUEST: Add PRDs Documentation Section (Planner Mode)
+
+### Background and Motivation
+- User requested adding a new group under documentation called "PRDs" (Product Requirements Documents)
+- Need to organize product specifications and requirements in a structured, accessible way
+- Should integrate with existing VitePress documentation structure
+
+### Key Challenges and Analysis
+- Documentation Structure: Ensure PRDs section fits cleanly into existing docs organization
+- Navigation: Update VitePress config to include PRDs in sidebar/navigation
+- Template Consistency: Create standardized PRD template for future documents
+- Discoverability: Make PRDs easily findable from main documentation index
+
+### Design Options Considered
+1) Simple folder approach - Create `/docs/prds/` folder with individual markdown files
+   - Pros: Simple, follows existing pattern, easy to maintain
+   - Cons: May need manual navigation updates
+2) VitePress category approach - Use VitePress built-in categorization
+   - Pros: Automatic navigation, better UX
+   - Cons: More complex setup
+3) Separate documentation site - Dedicated PRD site
+   - Pros: Complete separation of concerns
+   - Cons: Overkill, maintenance overhead
+
+### Plan of Record (Option 1 + VitePress integration)
+- Create `/docs/prds/` directory structure
+- Add PRDs section to VitePress navigation config
+- Create index page for PRDs with overview and links
+- Establish PRD template for consistency
+- Update main docs index to reference PRDs section
+
+### High-level Task Breakdown with Success Criteria
+A) Create PRDs directory structure
+   - Tasks: Create `/docs/prds/` folder and `index.md` with overview
+   - Success: Directory exists, index page renders correctly
+   - Files: `/docs/prds/index.md`
+
+B) Update VitePress navigation
+   - Tasks: Modify `.vitepress/config.ts` to include PRDs in sidebar
+   - Success: PRDs section appears in documentation navigation
+   - Files: `/docs/.vitepress/config.ts`
+
+C) Create PRD template
+   - Tasks: Create standardized PRD template with sections for requirements, user stories, acceptance criteria
+   - Success: Template provides clear structure for future PRDs
+   - Files: `/docs/prds/template.md`
+
+D) Update main documentation index
+   - Tasks: Add PRDs reference to main docs index page
+   - Success: PRDs section is discoverable from main documentation
+   - Files: `/docs/index.md`
+
+### Testing Plan
+- Verify VitePress builds without errors
+- Check navigation links work correctly
+- Ensure PRDs section is accessible and well-organized
+
+### Risks & Mitigations
+- Risk: VitePress config errors break documentation build
+  Mitigation: Test build after each config change
+- Risk: Navigation becomes cluttered
+  Mitigation: Use clear, concise section naming
+
+### Approval Request
+- Please confirm to proceed with creating the PRDs documentation section in Executor mode, starting with Task A (Create PRDs directory structure)
 
 ## Lessons
 - When join-derived fields appear empty in UI while the SQL join and FK integrity look correct, environment parity and runtime context are the most likely culprits. Adding bounded, gated logs server-side provides high-signal validation with minimal risk.

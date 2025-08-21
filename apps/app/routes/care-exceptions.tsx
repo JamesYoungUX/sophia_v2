@@ -37,8 +37,9 @@ function humanizeTime(input?: string | Date | null): string {
     const value = Math.round(absMs / ms);
     if (value >= 1) {
       const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-      // Note: rtf expects positive for future, negative for past. We want "x ago" for past dates.
-      return rtf.format(Math.sign(diffMs) * value * -1, unit);
+      // For past dates: diffMs < 0, so we want negative value for rtf.format
+      // For future dates: diffMs > 0, so we want positive value for rtf.format
+      return rtf.format(diffMs < 0 ? -value : value, unit);
     }
   }
   return "just now";

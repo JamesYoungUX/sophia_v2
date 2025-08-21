@@ -173,6 +173,17 @@ const data = {
         },
       ],
     },
+    {
+      title: "PRDs",
+      url: "#",
+      icon: BookOpen,
+      items: [
+        {
+          title: "Med Plan PRD",
+          url: "/prds/med-plan",
+        },
+      ],
+    },
   ],
   projects: [
     {
