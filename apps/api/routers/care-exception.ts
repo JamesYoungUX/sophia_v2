@@ -7,6 +7,9 @@ import { publicProcedure, router } from "../lib/trpc.js";
 import { careException } from "@repo/db/schema/care-exception";
 import { patient } from "@repo/db/schema/patient";
 
+// Temporary debug logging flag for this router; disable or remove after validation
+const DEBUG_LOG = false;
+
 // Enums enforced at API layer; DB stores as text for flexibility
 const SeverityEnum = z.enum(["low", "medium", "high"]);
 const StatusEnum = z.enum(["open", "acknowledged", "in_progress", "resolved", "dismissed"]);
@@ -42,7 +45,27 @@ export const careExceptionRouter = router({
         .default({ limit: 50, offset: 0 }),
     )
     .query(async ({ input, ctx }) => {
+      const startedAt = Date.now();
       const { limit = 50, offset = 0, patientId, status, severity, escalatedOnly } = input ?? {};
+
+      if (DEBUG_LOG) {
+        try {
+          const envKeys = ctx?.env ? Object.keys(ctx.env) : [];
+          const interestingEnv = envKeys.filter((k) =>
+            ["HYPERDRIVE", "HYPERDRIVE_DIRECT", "DATABASE_URL"].some((p) => k.includes(p))
+          );
+          const hasDb = !!ctx?.db;
+          const hasSession = !!ctx?.session;
+          const hasUser = !!ctx?.user;
+          const infoPath = (ctx as any)?.info?.path ?? "unknown";
+          console.log(
+            "[DEBUG][careException.list] start",
+            JSON.stringify({ input: { patientId, status, severity, escalatedOnly, limit, offset }, ctx: { hasDb, hasSession, hasUser, infoPath, envKeys: interestingEnv } })
+          );
+        } catch (e) {
+          console.log("[DEBUG][careException.list] failed to log start context:", e);
+        }
+      }
 
       const conditions = [] as any[];
       if (patientId) conditions.push(eq(careException.patientId, patientId));
@@ -80,6 +103,38 @@ export const careExceptionRouter = router({
       const rows = await (conditions.length ? base.where(and(...conditions)) : base)
         .limit(limit)
         .offset(offset);
+
+      if (DEBUG_LOG) {
+        try {
+          const total = rows.length;
+          let matched = 0;
+          for (const r of rows) {
+            // Consider a join "matched" if any of the joined fields are non-null
+            if (r.patientFirstName != null || r.patientLastName != null || r.patientMrnId != null) matched++;
+          }
+          const orphans = total - matched;
+          const sample = rows.slice(0, 5).map((r) => ({
+            id: r.id,
+            patientId: r.patientId,
+            patient: {
+              first: r.patientFirstName ?? null,
+              last: r.patientLastName ?? null,
+              mrn: r.patientMrnId ?? null,
+            },
+            type: r.type,
+            severity: r.severity,
+            status: r.status,
+          }));
+          const durationMs = Date.now() - startedAt;
+          console.log(
+            "[DEBUG][careException.list] results",
+            JSON.stringify({ total, matched, orphans, sampleCount: sample.length, durationMs, page: { limit, offset } })
+          );
+          console.log("[DEBUG][careException.list] sample rows:", JSON.stringify(sample));
+        } catch (e) {
+          console.log("[DEBUG][careException.list] failed to log results:", e);
+        }
+      }
 
       return rows;
     }),
@@ -209,9 +264,11 @@ export const careExceptionRouter = router({
 });
 
 // DEBUG: log router child keys on init
-try {
-  const keys = Object.keys((careExceptionRouter as any)?._def?.record ?? {});
-  console.log("[DEBUG] careExceptionRouter init child keys:", keys);
-} catch (e) {
-  console.log("[DEBUG] careExceptionRouter init: failed to read keys", e);
+if (DEBUG_LOG) {
+  try {
+    const keys = Object.keys((careExceptionRouter as any)?._def?.record ?? {});
+    console.log("[DEBUG] careExceptionRouter init child keys:", keys);
+  } catch (e) {
+    console.log("[DEBUG] careExceptionRouter init: failed to read keys", e);
+  }
 }

@@ -104,6 +104,17 @@ function InterventionsPage() {
         lastDetectedAt_h: humanizeTime(r.lastDetectedAt ?? null),
       }));
       console.debug("[CareExceptions] timestamp sample (first 3)", sample);
+      // Log the first item's patient fields specifically
+      if (data[0]) {
+        const item = data[0];
+        console.log("[CareExceptions] first item patient fields:", {
+          patientId: item.patientId,
+          patientFirstName: item.patientFirstName,
+          patientLastName: item.patientLastName,
+          patientMrnId: item.patientMrnId,
+          allKeys: Object.keys(item)
+        });
+      }
     }
   }, [data, escalatedOnly]);
 

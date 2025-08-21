@@ -5,6 +5,7 @@
  * - Loads DATABASE_URL from repo root .env.local (if available)
  * - Connects to Postgres and inspects the existence and structure of public.care_exception
  * - Prints columns, types, nullability, defaults, and constraints
+ * - Additionally verifies FK to patient, computes orphan counts, and samples joined data
  *
  * This script DOES NOT modify any data.
  */
@@ -50,6 +51,14 @@ async function main() {
     if (DEBUG_LOG) console.log('📍 Using DATABASE_URL:', databaseUrl.replace(/\/\/[^@]+@/, '//***:***@'));
 
     const sql = postgres(databaseUrl, { prepare: true });
+
+    // Print DB/session info to help with environment parity checks
+    const dbInfoRows = await sql/* sql */`
+      SELECT current_database() AS db, current_user AS usr, inet_server_addr()::text AS host, inet_server_port() AS port, now() AS ts;
+    `;
+    const dbInfo = dbInfoRows?.[0];
+    console.log('--- DB Session Info ---');
+    console.log(`db=${dbInfo?.db} user=${dbInfo?.usr} host=${dbInfo?.host}:${dbInfo?.port} ts=${dbInfo?.ts}`);
 
     if (DEBUG_LOG) console.log('🔍 Checking if table public.care_exception exists...');
     const tableCheck = await sql/* sql */`
@@ -140,6 +149,79 @@ async function main() {
     console.log('\n--- Indexes ---');
     for (const idx of indexes) {
       console.log(`${idx.index_name} on ${idx.column_name} unique=${idx.is_unique}`);
+    }
+
+    // Explicit FK verification to patient
+    console.log('\n--- FK Verification (care_exception.patient_id -> patient.pat_id) ---');
+    const fkRows = await sql/* sql */`
+      SELECT
+        tc.constraint_name,
+        kcu.column_name AS ce_column,
+        ccu.table_name AS ref_table,
+        ccu.column_name AS ref_column
+      FROM information_schema.table_constraints AS tc
+      JOIN information_schema.key_column_usage AS kcu
+        ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+      JOIN information_schema.constraint_column_usage AS ccu
+        ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND tc.table_schema = 'public'
+        AND tc.table_name = 'care_exception'
+        AND ccu.table_name = 'patient'
+        AND ccu.column_name = 'pat_id'
+        AND kcu.column_name = 'patient_id';
+    `;
+    if (fkRows.length === 0) {
+      console.log('❗ No FK found linking care_exception.patient_id to patient.pat_id');
+    } else {
+      for (const r of fkRows) {
+        console.log(`FK ${r.constraint_name}: care_exception.${r.ce_column} -> ${r.ref_table}.${r.ref_column}`);
+      }
+    }
+
+    // Orphan and match counts
+    console.log('\n--- Join Health (care_exception LEFT JOIN patient) ---');
+    const counts = await sql/* sql */`
+      SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN p.pat_id IS NULL THEN 1 ELSE 0 END) AS orphans,
+        SUM(CASE WHEN p.pat_id IS NOT NULL THEN 1 ELSE 0 END) AS matched
+      FROM care_exception ce
+      LEFT JOIN patient p ON p.pat_id = ce.patient_id;
+    `;
+    const cnt = counts?.[0];
+    console.log(`total=${cnt?.total} matched=${cnt?.matched} orphans=${cnt?.orphans}`);
+
+    // Sample orphan patient_ids (up to 10)
+    const orphanSamples = await sql/* sql */`
+      SELECT ce.patient_id, COUNT(*) AS n
+      FROM care_exception ce
+      LEFT JOIN patient p ON p.pat_id = ce.patient_id
+      WHERE p.pat_id IS NULL
+      GROUP BY ce.patient_id
+      ORDER BY n DESC
+      LIMIT 10;
+    `;
+    if (orphanSamples.length === 0) {
+      console.log('No orphan care_exception rows detected.');
+    } else {
+      console.log('Orphan samples (patient_id => count):');
+      for (const r of orphanSamples) {
+        console.log(`- ${r.patient_id} => ${r.n}`);
+      }
+    }
+
+    // Sample matched joined rows to confirm patient fields are populated
+    const joinedSamples = await sql/* sql */`
+      SELECT ce.id, ce.patient_id, p.pat_first_name, p.pat_last_name, p.pat_mrn_id
+      FROM care_exception ce
+      JOIN patient p ON p.pat_id = ce.patient_id
+      ORDER BY ce.created_at DESC NULLS LAST
+      LIMIT 10;
+    `;
+    console.log('\nJoined samples (latest 10):');
+    for (const r of joinedSamples) {
+      console.log(`ce.id=${r.id} pid=${r.patient_id} name=${r.pat_last_name || ''}, ${r.pat_first_name || ''} mrn=${r.pat_mrn_id || ''}`);
     }
 
     await sql.end({ timeout: 1 });
