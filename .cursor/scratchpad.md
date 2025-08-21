@@ -237,9 +237,11 @@ The project includes several management commands:
   - Ran `bun run check` in db workspace.
   - Result: "Everything's fine 🐶🔥" — config/env loaded correctly; ready to attempt `push`.
 
-## Executor's Feedback or Assistance Requests
-
-- Proceeding per approval with `bun run push` next to reconcile schema non-destructively and create `care_exception` if needed.
+- Care Exceptions UI Toggle Integration — Executor Update:
+  - Step A completed: Added shadcn/ui Toggle to shared UI package and exported from packages/ui/index.ts; changes committed.
+  - Import path now available to consumers: Toggle from @repo/ui.
+  - Next (Step B): Replace Switch with Toggle chip in Care Exceptions route and bind to escalatedOnly state. Awaiting approval to proceed.
+  - Proceeding per approval with `bun run push` next to reconcile schema non-destructively and create `care_exception` if needed.
 
 ### ✅ RESOLVED: Schema Changes Reverted
 

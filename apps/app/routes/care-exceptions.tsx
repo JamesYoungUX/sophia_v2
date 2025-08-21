@@ -5,7 +5,7 @@ import { api } from "@/lib/trpc";
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
 import { Badge } from "@repo/ui";
-import { Switch } from "@repo/ui";
+import { Toggle } from "@repo/ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui";
 import { AlertTriangle, Clock, User } from "lucide-react";
 
@@ -190,13 +190,18 @@ function InterventionsPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Escalated only</span>
-              <Switch
-                checked={escalatedOnly}
-                onCheckedChange={(v) => {
+              <Toggle
+                aria-label="Toggle escalated only filter"
+                pressed={escalatedOnly}
+                onPressedChange={(v) => {
                   if (DEBUG_LOG) console.log("[CareExceptions] toggle escalatedOnly", v);
                   setEscalatedOnly(Boolean(v));
                 }}
-              />
+                variant="default"
+                size="sm"
+              >
+                Escalated
+              </Toggle>
             </div>
           </div>
         </CardHeader>
