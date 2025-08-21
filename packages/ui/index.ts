@@ -22,6 +22,7 @@ export * from "./components/sheet";
 export * from "./components/sidebar";
 export * from "./components/skeleton";
 export * from "./components/switch";
+export * from "./components/toggle";
 export * from "./components/table";
 export * from "./components/textarea";
 export * from "./components/tooltip";
