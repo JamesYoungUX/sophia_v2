@@ -93,7 +93,6 @@ interface TaskSpecification {
 
 interface SearchFilters {
   query: string;
-  status?: string;
   category?: string;
   priority?: string;
   versionStatus?: string;
@@ -163,25 +162,21 @@ const mockTasks: TaskSpecification[] = [
   },
 ];
 
-// Status badge component
-function StatusBadge({ status }: { status: TaskSpecification['status'] }) {
+// Version status badge component
+function VersionStatusBadge({ versionStatus }: { versionStatus: TaskSpecification['versionStatus'] }) {
   const statusConfig = {
-    pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-    scheduled: { color: 'bg-blue-100 text-blue-800', icon: Calendar },
-    in_progress: { color: 'bg-green-100 text-green-800', icon: Play },
-    completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-    cancelled: { color: 'bg-red-100 text-red-800', icon: AlertCircle },
-    deferred: { color: 'bg-gray-100 text-gray-800', icon: Clock },
-    failed: { color: 'bg-red-100 text-red-800', icon: AlertCircle },
+    draft: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+    active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+    inactive: { color: 'bg-gray-100 text-gray-800', icon: AlertCircle },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[versionStatus];
   const Icon = config.icon;
 
   return (
     <Badge className={`${config.color} flex items-center gap-1`}>
       <Icon className="h-3 w-3" />
-      {status.replace('_', ' ')}
+      {versionStatus}
     </Badge>
   );
 }
@@ -233,25 +228,8 @@ function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) {
         
         <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
           <CollapsibleContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div>
-                <Label htmlFor="status-filter">Status</Label>
-                <Select value={filters.status || ''} onValueChange={(value) => handleFilterChange('status', value || undefined)}>
-                  <SelectTrigger id="status-filter">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="scheduled">Scheduled</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                    <SelectItem value="deferred">Deferred</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
               
               <div>
                 <Label htmlFor="category-filter">Category</Label>
@@ -354,8 +332,8 @@ function TaskList({
               <TableHead>Task ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
+              <TableHead>Version Status</TableHead>
               <TableHead>Version</TableHead>
               <TableHead>Updated</TableHead>
             </TableRow>
@@ -373,10 +351,10 @@ function TaskList({
                   </div>
                 </TableCell>
                 <TableCell>{task.category}</TableCell>
-                <TableCell>
-                  <StatusBadge status={task.status} />
-                </TableCell>
                 <TableCell>{task.priority}</TableCell>
+                <TableCell>
+                  <VersionStatusBadge versionStatus={task.versionStatus} />
+                </TableCell>
                 <TableCell className="font-mono text-sm">{task.version}</TableCell>
                 <TableCell className="text-sm text-gray-500">
                   {formatDate(task.updatedAt)}
@@ -420,7 +398,6 @@ export function TaskManagementRepository() {
         return false;
       }
       
-      if (filters.status && task.status !== filters.status) return false;
       if (filters.category && task.category !== filters.category) return false;
       if (filters.priority && task.priority !== filters.priority) return false;
       if (filters.versionStatus && task.versionStatus !== filters.versionStatus) return false;
