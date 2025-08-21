@@ -37,21 +37,35 @@ import { useNavigate } from '@tanstack/react-router';
 
 const DEBUG_LOG = true;
 
+if (DEBUG_LOG) console.log('TaskManagementRepository: Component loaded');
+
 // Helper function to safely format dates
 const formatDate = (date: Date | string | null | undefined): string => {
-  if (!date) return 'N/A';
+  if (!date) {
+    return '- unavailable';
+  }
   
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) {
-      if (DEBUG_LOG) console.warn('Invalid date encountered:', date);
-      return 'Invalid Date';
+      return '- unavailable';
     }
-    return dateObj.toLocaleDateString();
-  } catch (error) {
-    if (DEBUG_LOG) console.error('Error formatting date:', error, date);
-    return 'Error';
+    return dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch {
+    return '- unavailable';
   }
+};
+
+// Helper function to safely display data with fallback
+const safeDisplay = (value: any): string => {
+  if (value === null || value === undefined || value === '') {
+    return '- unavailable';
+  }
+  return String(value);
 };
 
 // Types based on our task management system
@@ -103,64 +117,7 @@ interface SearchFilters {
   };
 }
 
-// Mock data for development
-const mockTasks: TaskSpecification[] = [
-  {
-    id: '1',
-    taskId: 'TASK-001',
-    name: 'Pre-operative Assessment',
-    category: 'Assessment',
-    instructionPatient: 'Complete pre-operative questionnaire and attend assessment appointment',
-    instructionClinician: 'Conduct comprehensive pre-operative assessment including medical history review',
-    timing: {
-      offsetDays: -7,
-      durationDays: 1,
-      timeOfDay: '09:00',
-      isFlexible: false,
-    },
-    conditions: {
-      surgery_types: ['orthopedic', 'cardiac'],
-      medications: ['anticoagulants'],
-    },
-    evidence: {
-      source: 'Clinical Guidelines 2024',
-      level: 'A',
-      publicationDate: '2024-01-01',
-    },
-    status: 'scheduled',
-    priority: 'high',
-    versionStatus: 'active',
-    version: '1.0.0',
-    isTemplate: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-06-10'),
-  },
-  {
-    id: '2',
-    taskId: 'TASK-002',
-    name: 'Post-operative Medication Review',
-    category: 'Medication',
-    instructionPatient: 'Take prescribed medications as directed and report any side effects',
-    instructionClinician: 'Review medication regimen and adjust dosages based on patient response',
-    timing: {
-      offsetDays: 1,
-      durationDays: 1,
-      timeOfDay: '10:00',
-      isFlexible: true,
-    },
-    conditions: {
-      surgery_types: ['cardiac'],
-      comorbidities: ['diabetes', 'hypertension'],
-    },
-    status: 'pending',
-    priority: 'medium',
-    versionStatus: 'draft',
-    version: '0.1.0',
-    isTemplate: false,
-    createdAt: new Date('2024-02-01'),
-    updatedAt: new Date('2024-06-08'),
-  },
-];
+// Note: Mock data removed - now using real API data only
 
 // Version status badge component
 function VersionStatusBadge({ versionStatus }: { versionStatus: TaskSpecification['versionStatus'] }) {
@@ -341,23 +298,27 @@ function TaskList({
           <TableBody>
             {tasks.map((task) => (
               <TableRow key={task.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onTaskSelect(task)}>
-                <TableCell className="font-mono text-sm">{task.taskId}</TableCell>
+                <TableCell className="font-mono text-sm">{safeDisplay(task.taskId)}</TableCell>
                 <TableCell>
                   <div>
-                    <div className="font-medium">{task.name}</div>
+                    <div className="font-medium">{safeDisplay(task.name)}</div>
                     <div className="text-sm text-gray-500 truncate max-w-xs">
-                      {task.instructionPatient}
+                      {safeDisplay(task.instructionPatient)}
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{task.category}</TableCell>
-                <TableCell>{task.priority}</TableCell>
-                <TableCell className="font-mono text-sm">{task.version}</TableCell>
+                <TableCell>{safeDisplay(task.category)}</TableCell>
+                <TableCell>{safeDisplay(task.priority)}</TableCell>
+                <TableCell className="font-mono text-sm">{safeDisplay(task.version)}</TableCell>
                 <TableCell className="text-sm text-gray-500">
                   {formatDate(task.updatedAt)}
                 </TableCell>
                 <TableCell>
-                  <VersionStatusBadge versionStatus={task.versionStatus} />
+                  {task.versionStatus ? (
+                    <VersionStatusBadge versionStatus={task.versionStatus} />
+                  ) : (
+                    <span className="text-gray-500">- unavailable</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -379,18 +340,28 @@ function TaskList({
 export function TaskManagementRepository() {
   // All hooks must be called at the top level, before any conditional logic
   const navigate = useNavigate();
-  const { data: tasks = mockTasks, isLoading, error } = api.task.list.useQuery({}, {
+  const { data: tasks, isLoading, error } = api.task.list.useQuery({}, {
     retry: false,
     refetchOnWindowFocus: false,
   });
   const [filters, setFilters] = useState<SearchFilters>({ query: '' });
 
+  if (DEBUG_LOG) {
+    console.log('TaskManagementRepository: API Response - tasks:', tasks);
+    console.log('TaskManagementRepository: API Response - isLoading:', isLoading);
+    console.log('TaskManagementRepository: API Response - error:', error);
+  }
+
 
   // Filter tasks based on search criteria
   const filteredTasks = useMemo(() => {
+    if (!tasks || !Array.isArray(tasks)) {
+      return [];
+    }
+    
     return tasks.filter((task: any) => {
       if (filters.query && !(
-        task.name.toLowerCase().includes(filters.query.toLowerCase()) ||
+        task.name?.toLowerCase().includes(filters.query.toLowerCase()) ||
         task.taskId?.toLowerCase().includes(filters.query.toLowerCase()) ||
         task.instructionPatient?.toLowerCase().includes(filters.query.toLowerCase()) ||
         task.instructionClinician?.toLowerCase().includes(filters.query.toLowerCase())
@@ -432,12 +403,14 @@ export function TaskManagementRepository() {
     );
   }
 
-  if (error && tasks.length === 0) {
+  if (error || (!isLoading && !tasks)) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600">Error loading tasks: {error.message}</p>
+          <p className="text-red-600">
+            {error ? `Error loading tasks: ${error.message}` : 'Unable to connect to database - data unavailable'}
+          </p>
         </div>
       </div>
     );
