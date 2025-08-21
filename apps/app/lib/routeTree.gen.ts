@@ -17,6 +17,8 @@ import { Route as AccountRouteImport } from './../routes/account'
 import { Route as AboutRouteImport } from './../routes/about'
 import { Route as IndexRouteImport } from './../routes/index'
 import { Route as PrdsSurgicalPlanRouteImport } from './../routes/prds.surgical-plan'
+import { Route as PrdsSophiaPatientEngagementRouteImport } from './../routes/prds.sophia-patient-engagement'
+import { Route as PrdsGenesisAgentRouteImport } from './../routes/prds.genesis-agent'
 import { Route as AgentsQuantumAgentRouteImport } from './../routes/agents.quantum-agent'
 import { Route as AgentsPatientEngagementRouteImport } from './../routes/agents.patient-engagement'
 import { Route as AgentsGenesisAgentRouteImport } from './../routes/agents.genesis-agent'
@@ -62,6 +64,17 @@ const PrdsSurgicalPlanRoute = PrdsSurgicalPlanRouteImport.update({
   path: '/prds/surgical-plan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrdsSophiaPatientEngagementRoute =
+  PrdsSophiaPatientEngagementRouteImport.update({
+    id: '/prds/sophia-patient-engagement',
+    path: '/prds/sophia-patient-engagement',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PrdsGenesisAgentRoute = PrdsGenesisAgentRouteImport.update({
+  id: '/prds/genesis-agent',
+  path: '/prds/genesis-agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentsQuantumAgentRoute = AgentsQuantumAgentRouteImport.update({
   id: '/agents/quantum-agent',
   path: '/agents/quantum-agent',
@@ -95,6 +108,8 @@ export interface FileRoutesByFullPath {
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
+  '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
+  '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +124,8 @@ export interface FileRoutesByTo {
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
+  '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
+  '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
 }
 export interface FileRoutesById {
@@ -124,6 +141,8 @@ export interface FileRoutesById {
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
+  '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
+  '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +159,8 @@ export interface FileRouteTypes {
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
+    | '/prds/genesis-agent'
+    | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +175,8 @@ export interface FileRouteTypes {
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
+    | '/prds/genesis-agent'
+    | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
   id:
     | '__root__'
@@ -168,6 +191,8 @@ export interface FileRouteTypes {
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
+    | '/prds/genesis-agent'
+    | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +208,8 @@ export interface RootRouteChildren {
   AgentsGenesisAgentRoute: typeof AgentsGenesisAgentRoute
   AgentsPatientEngagementRoute: typeof AgentsPatientEngagementRoute
   AgentsQuantumAgentRoute: typeof AgentsQuantumAgentRoute
+  PrdsGenesisAgentRoute: typeof PrdsGenesisAgentRoute
+  PrdsSophiaPatientEngagementRoute: typeof PrdsSophiaPatientEngagementRoute
   PrdsSurgicalPlanRoute: typeof PrdsSurgicalPlanRoute
 }
 
@@ -244,6 +271,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrdsSurgicalPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prds/sophia-patient-engagement': {
+      id: '/prds/sophia-patient-engagement'
+      path: '/prds/sophia-patient-engagement'
+      fullPath: '/prds/sophia-patient-engagement'
+      preLoaderRoute: typeof PrdsSophiaPatientEngagementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prds/genesis-agent': {
+      id: '/prds/genesis-agent'
+      path: '/prds/genesis-agent'
+      fullPath: '/prds/genesis-agent'
+      preLoaderRoute: typeof PrdsGenesisAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agents/quantum-agent': {
       id: '/agents/quantum-agent'
       path: '/agents/quantum-agent'
@@ -287,6 +328,8 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsGenesisAgentRoute: AgentsGenesisAgentRoute,
   AgentsPatientEngagementRoute: AgentsPatientEngagementRoute,
   AgentsQuantumAgentRoute: AgentsQuantumAgentRoute,
+  PrdsGenesisAgentRoute: PrdsGenesisAgentRoute,
+  PrdsSophiaPatientEngagementRoute: PrdsSophiaPatientEngagementRoute,
   PrdsSurgicalPlanRoute: PrdsSurgicalPlanRoute,
 }
 export const routeTree = rootRouteImport

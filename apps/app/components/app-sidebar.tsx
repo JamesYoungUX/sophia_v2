@@ -182,6 +182,14 @@ const data = {
           title: "Surgical Plan PRD",
           url: "/prds/surgical-plan",
         },
+        {
+          title: "Sophia Patient Engagement PRD",
+          url: "/prds/sophia-patient-engagement",
+        },
+        {
+          title: "Genesis Agent PRD",
+          url: "/prds/genesis-agent",
+        },
       ],
     },
   ],
