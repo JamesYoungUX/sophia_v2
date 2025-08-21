@@ -30,42 +30,30 @@ const DEBUG_LOG = false;
 
 // Helper function to safely format dates
 const formatDate = (date: Date | string | null | undefined): string => {
-  if (!date) return 'N/A';
+  if (!date) return '- unavailable';
   
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) {
       if (DEBUG_LOG) console.warn('Invalid date encountered:', date);
-      return 'Invalid Date';
+      return '- unavailable';
     }
     return dateObj.toLocaleDateString();
   } catch (error) {
     if (DEBUG_LOG) console.error('Error formatting date:', error, date);
-    return 'Error';
+    return '- unavailable';
   }
 };
 
-// Status badge component
-function StatusBadge({ status }: { status: string }) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'scheduled': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'deferred': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'failed': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+// Helper function to safely display values
+const safeDisplay = (value: any): string => {
+  if (value === null || value === undefined || value === '') {
+    return '- unavailable';
+  }
+  return String(value);
+};
 
-  return (
-    <Badge className={`${getStatusColor(status)} border`}>
-      {status.replace('_', ' ')}
-    </Badge>
-  );
-}
+// Note: StatusBadge component removed as status field is no longer displayed
 
 // Priority badge component
 function PriorityBadge({ priority }: { priority: string }) {
@@ -114,43 +102,45 @@ function TaskDetailsPage() {
   
   if (DEBUG_LOG) console.log('TaskDetailsPage rendering with taskId:', taskId);
   
-  // For now, we'll use mock data since the API integration would need to be set up
-  // In a real implementation, you would use: const { data: task, isLoading, error } = api.task.getById.useQuery({ id: taskId });
+  // Use real API data instead of mock data
+  const { data: task, isLoading, error } = api.task.byId.useQuery({ id: taskId });
   
-  // Mock task data - in real implementation this would come from the API
-  const mockTask = {
-    id: taskId,
-    taskId: `TASK-${taskId}`,
-    name: 'Pre-operative Assessment',
-    category: 'Assessment',
-    instructionPatient: 'Complete pre-operative questionnaire and attend assessment appointment. Please arrive 30 minutes early and bring all current medications.',
-    instructionClinician: 'Conduct comprehensive pre-operative assessment including medical history review, physical examination, and risk stratification.',
-    timing: {
-      offsetDays: -7,
-      durationDays: 1,
-      timeOfDay: '09:00',
-      isFlexible: false,
-    },
-    conditions: {
-      surgery_types: ['orthopedic', 'cardiac'],
-      medications: ['anticoagulants'],
-      comorbidities: ['diabetes'],
-    },
-    evidence: {
-      source: 'Clinical Guidelines 2024',
-      url: 'https://example.com/clinical-guidelines-2024',
-      level: 'A',
-      publicationDate: '2024-01-01',
-      notes: 'Based on latest evidence-based practices for pre-operative care.',
-    },
-    status: 'scheduled',
-    priority: 'high',
-    versionStatus: 'active',
-    version: '1.0.0',
-    isTemplate: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-06-10'),
-  };
+  if (DEBUG_LOG) {
+    console.log('Task data:', task);
+    console.log('Loading state:', isLoading);
+    console.log('Error state:', error);
+  }
+  
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading task details...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle error state
+  if (error || !task) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Task Not Found</h2>
+          <p className="text-muted-foreground mb-4">
+            {error?.message || 'The requested task could not be found or is unavailable.'}
+          </p>
+          <Button onClick={() => navigate({ to: '/task-management' })}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Tasks
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleBackToList = () => {
     navigate({ to: '/task-management' });
@@ -170,7 +160,7 @@ function TaskDetailsPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Tasks
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight">{mockTask.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{safeDisplay(task.name)}</h1>
         </div>
       </div>
 
@@ -190,22 +180,16 @@ function TaskDetailsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Task ID</Label>
-                  <p className="font-mono text-sm mt-1">{mockTask.taskId}</p>
+                  <p className="font-mono text-sm mt-1">{safeDisplay(task.taskId)}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Category</Label>
-                  <p className="mt-1">{mockTask.category}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
-                  <div className="mt-1">
-                    <StatusBadge status={mockTask.status} />
-                  </div>
+                  <p className="mt-1">{safeDisplay(task.category)}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Priority</Label>
                   <div className="mt-1">
-                    <PriorityBadge priority={mockTask.priority} />
+                    {task.priority ? <PriorityBadge priority={task.priority} /> : <span>- unavailable</span>}
                   </div>
                 </div>
               </div>
@@ -223,12 +207,12 @@ function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Patient Instructions</Label>
-                <p className="mt-2 text-sm leading-relaxed">{mockTask.instructionPatient}</p>
+                <p className="mt-2 text-sm leading-relaxed">{safeDisplay(task.instructionPatient)}</p>
               </div>
               <Separator />
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Clinician Instructions</Label>
-                <p className="mt-2 text-sm leading-relaxed">{mockTask.instructionClinician}</p>
+                <p className="mt-2 text-sm leading-relaxed">{safeDisplay(task.instructionClinician)}</p>
               </div>
             </CardContent>
           </Card>
@@ -245,19 +229,19 @@ function TaskDetailsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Offset Days</Label>
-                  <p className="mt-1">{mockTask.timing.offsetDays} days</p>
+                  <p className="mt-1">{task.timing?.offsetDays !== undefined ? `${task.timing.offsetDays} days` : '- unavailable'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Duration</Label>
-                  <p className="mt-1">{mockTask.timing.durationDays} day(s)</p>
+                  <p className="mt-1">{task.timing?.durationDays !== undefined ? `${task.timing.durationDays} day(s)` : '- unavailable'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Time of Day</Label>
-                  <p className="mt-1">{mockTask.timing.timeOfDay || 'Not specified'}</p>
+                  <p className="mt-1">{task.timing?.timeOfDay || '- unavailable'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Flexibility</Label>
-                  <p className="mt-1">{mockTask.timing.isFlexible ? 'Flexible' : 'Strict'}</p>
+                  <p className="mt-1">{task.timing?.isFlexible !== undefined ? (task.timing.isFlexible ? 'Flexible' : 'Strict') : '- unavailable'}</p>
                 </div>
               </div>
             </CardContent>
@@ -277,17 +261,17 @@ function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Version</Label>
-                <p className="mt-1 font-mono">{mockTask.version}</p>
+                <p className="mt-1 font-mono">{safeDisplay(task.version)}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Status</Label>
                 <div className="mt-1">
-                  <VersionStatusBadge versionStatus={mockTask.versionStatus} />
+                  {task.versionStatus ? <VersionStatusBadge versionStatus={task.versionStatus} /> : <span>- unavailable</span>}
                 </div>
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Template</Label>
-                <p className="mt-1">{mockTask.isTemplate ? 'Yes' : 'No'}</p>
+                <p className="mt-1">{task.isTemplate !== undefined ? (task.isTemplate ? 'Yes' : 'No') : '- unavailable'}</p>
               </div>
             </CardContent>
           </Card>
@@ -301,42 +285,48 @@ function TaskDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockTask.conditions.surgery_types && mockTask.conditions.surgery_types.length > 0 && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Surgery Types</Label>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {mockTask.conditions.surgery_types.map((type, index) => (
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Surgery Types</Label>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {task.conditions?.surgery_types && task.conditions.surgery_types.length > 0 ? (
+                    task.conditions.surgery_types.map((type: string, index: number) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {type}
                       </Badge>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">- unavailable</span>
+                  )}
                 </div>
-              )}
-              {mockTask.conditions.medications && mockTask.conditions.medications.length > 0 && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Medications</Label>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {mockTask.conditions.medications.map((med, index) => (
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Medications</Label>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {task.conditions?.medications && task.conditions.medications.length > 0 ? (
+                    task.conditions.medications.map((med: string, index: number) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {med}
                       </Badge>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">- unavailable</span>
+                  )}
                 </div>
-              )}
-              {mockTask.conditions.comorbidities && mockTask.conditions.comorbidities.length > 0 && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Comorbidities</Label>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {mockTask.conditions.comorbidities.map((condition, index) => (
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Comorbidities</Label>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {task.conditions?.comorbidities && task.conditions.comorbidities.length > 0 ? (
+                    task.conditions.comorbidities.map((condition: string, index: number) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {condition}
                       </Badge>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">- unavailable</span>
+                  )}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
@@ -351,26 +341,20 @@ function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Source</Label>
-                <p className="mt-1 text-sm">{mockTask.evidence.source}</p>
+                <p className="mt-1 text-sm">{safeDisplay(task.evidence?.source)}</p>
               </div>
-              {mockTask.evidence.level && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Evidence Level</Label>
-                  <p className="mt-1 text-sm">{mockTask.evidence.level}</p>
-                </div>
-              )}
-              {mockTask.evidence.publicationDate && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Publication Date</Label>
-                  <p className="mt-1 text-sm">{formatDate(mockTask.evidence.publicationDate)}</p>
-                </div>
-              )}
-              {mockTask.evidence.notes && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Notes</Label>
-                  <p className="mt-1 text-sm leading-relaxed">{mockTask.evidence.notes}</p>
-                </div>
-              )}
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Evidence Level</Label>
+                <p className="mt-1 text-sm">{safeDisplay(task.evidence?.level)}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Publication Date</Label>
+                <p className="mt-1 text-sm">{formatDate(task.evidence?.publicationDate)}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Notes</Label>
+                <p className="mt-1 text-sm leading-relaxed">{safeDisplay(task.evidence?.notes)}</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -385,11 +369,11 @@ function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Created</Label>
-                <p className="mt-1 text-sm">{formatDate(mockTask.createdAt)}</p>
+                <p className="mt-1 text-sm">{formatDate(task.createdAt)}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Last Updated</Label>
-                <p className="mt-1 text-sm">{formatDate(mockTask.updatedAt)}</p>
+                <p className="mt-1 text-sm">{formatDate(task.updatedAt)}</p>
               </div>
             </CardContent>
           </Card>
