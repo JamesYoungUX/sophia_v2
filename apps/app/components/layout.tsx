@@ -48,6 +48,7 @@ const routeToBreadcrumb: Record<string, { section: string; group: string; page: 
   "/cardiology": { section: "Platform", group: "Projects", page: "Cardiology Unit" },
   "/patient-management": { section: "Platform", group: "Projects", page: "Patient Management" },
   "/quality-assurance": { section: "Platform", group: "Projects", page: "Quality Assurance" },
+  "/prds/surgical-plan": { section: "Platform", group: "PRDs", page: "Surgical Plan PRD" },
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
