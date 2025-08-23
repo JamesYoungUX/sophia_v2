@@ -1,18 +1,24 @@
 /* SPDX-FileCopyrightText: 2014-present Kriasoft */
 /* SPDX-License-Identifier: MIT */
 
-import { z } from "zod";
-import { and, eq } from "drizzle-orm";
-import { publicProcedure, router } from "../lib/trpc.js";
 import { careException } from "@repo/db/schema/care-exception";
 import { patient } from "@repo/db/schema/patient";
+import { and, eq } from "drizzle-orm";
+import { z } from "zod";
+import { publicProcedure, router } from "../lib/trpc.js";
 
 // Temporary debug logging flag for this router; disable or remove after validation
 const DEBUG_LOG = false;
 
 // Enums enforced at API layer; DB stores as text for flexibility
 const SeverityEnum = z.enum(["low", "medium", "high"]);
-const StatusEnum = z.enum(["open", "acknowledged", "in_progress", "resolved", "dismissed"]);
+const StatusEnum = z.enum([
+  "open",
+  "acknowledged",
+  "in_progress",
+  "resolved",
+  "dismissed",
+]);
 const EscalatedByTypeEnum = z.enum(["agent", "human"]);
 const EscalatedByAgentEnum = z.enum([
   "compliance",
@@ -46,13 +52,22 @@ export const careExceptionRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const startedAt = Date.now();
-      const { limit = 50, offset = 0, patientId, status, severity, escalatedOnly } = input ?? {};
+      const {
+        limit = 50,
+        offset = 0,
+        patientId,
+        status,
+        severity,
+        escalatedOnly,
+      } = input ?? {};
 
       if (DEBUG_LOG) {
         try {
           const envKeys = ctx?.env ? Object.keys(ctx.env) : [];
           const interestingEnv = envKeys.filter((k) =>
-            ["HYPERDRIVE", "HYPERDRIVE_DIRECT", "DATABASE_URL"].some((p) => k.includes(p))
+            ["HYPERDRIVE", "HYPERDRIVE_DIRECT", "DATABASE_URL"].some((p) =>
+              k.includes(p),
+            ),
           );
           const hasDb = !!ctx?.db;
           const hasSession = !!ctx?.session;
@@ -60,10 +75,29 @@ export const careExceptionRouter = router({
           const infoPath = (ctx as any)?.info?.path ?? "unknown";
           console.log(
             "[DEBUG][careException.list] start",
-            JSON.stringify({ input: { patientId, status, severity, escalatedOnly, limit, offset }, ctx: { hasDb, hasSession, hasUser, infoPath, envKeys: interestingEnv } })
+            JSON.stringify({
+              input: {
+                patientId,
+                status,
+                severity,
+                escalatedOnly,
+                limit,
+                offset,
+              },
+              ctx: {
+                hasDb,
+                hasSession,
+                hasUser,
+                infoPath,
+                envKeys: interestingEnv,
+              },
+            }),
           );
         } catch (e) {
-          console.log("[DEBUG][careException.list] failed to log start context:", e);
+          console.log(
+            "[DEBUG][careException.list] failed to log start context:",
+            e,
+          );
         }
       }
 
@@ -100,7 +134,9 @@ export const careExceptionRouter = router({
         .from(careException)
         .leftJoin(patient, eq(patient.patId, careException.patientId));
 
-      const rows = await (conditions.length ? base.where(and(...conditions)) : base)
+      const rows = await (
+        conditions.length ? base.where(and(...conditions)) : base
+      )
         .limit(limit)
         .offset(offset);
 
@@ -110,7 +146,12 @@ export const careExceptionRouter = router({
           let matched = 0;
           for (const r of rows) {
             // Consider a join "matched" if any of the joined fields are non-null
-            if (r.patientFirstName != null || r.patientLastName != null || r.patientMrnId != null) matched++;
+            if (
+              r.patientFirstName != null ||
+              r.patientLastName != null ||
+              r.patientMrnId != null
+            )
+              matched++;
           }
           const orphans = total - matched;
           const sample = rows.slice(0, 5).map((r) => ({
@@ -128,9 +169,19 @@ export const careExceptionRouter = router({
           const durationMs = Date.now() - startedAt;
           console.log(
             "[DEBUG][careException.list] results",
-            JSON.stringify({ total, matched, orphans, sampleCount: sample.length, durationMs, page: { limit, offset } })
+            JSON.stringify({
+              total,
+              matched,
+              orphans,
+              sampleCount: sample.length,
+              durationMs,
+              page: { limit, offset },
+            }),
           );
-          console.log("[DEBUG][careException.list] sample rows:", JSON.stringify(sample));
+          console.log(
+            "[DEBUG][careException.list] sample rows:",
+            JSON.stringify(sample),
+          );
         } catch (e) {
           console.log("[DEBUG][careException.list] failed to log results:", e);
         }
@@ -142,7 +193,33 @@ export const careExceptionRouter = router({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
-      const result = await ctx.db.select().from(careException).where(eq(careException.id, input.id)).limit(1);
+      const result = await ctx.db
+        .select({
+          id: careException.id,
+          patientId: careException.patientId,
+          type: careException.type,
+          severity: careException.severity,
+          status: careException.status,
+          firstDetectedAt: careException.firstDetectedAt,
+          lastDetectedAt: careException.lastDetectedAt,
+          resolvedAt: careException.resolvedAt,
+          escalated: careException.escalated,
+          escalatedAt: careException.escalatedAt,
+          escalatedByType: careException.escalatedByType,
+          escalatedByAgent: careException.escalatedByAgent,
+          escalationReason: careException.escalationReason,
+          note: careException.note,
+          createdAt: careException.createdAt,
+          updatedAt: careException.updatedAt,
+          // Joined patient fields
+          patientLastName: patient.patLastName,
+          patientFirstName: patient.patFirstName,
+          patientMrnId: patient.patMrnId,
+        })
+        .from(careException)
+        .leftJoin(patient, eq(patient.patId, careException.patientId))
+        .where(eq(careException.id, input.id))
+        .limit(1);
       return result[0] ?? null;
     }),
 
@@ -162,13 +239,13 @@ export const careExceptionRouter = router({
         escalatedByAgent: EscalatedByAgentEnum.optional(),
         escalationReason: z.string().optional(),
         note: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const now = new Date();
       const escalated = Boolean(input.escalated);
 
-      const severity = escalated ? "high" : input.severity ?? "medium";
+      const severity = escalated ? "high" : (input.severity ?? "medium");
       const status = input.status ?? "open";
 
       const insertData = {
@@ -180,14 +257,21 @@ export const careExceptionRouter = router({
         lastDetectedAt: input.lastDetectedAt ?? input.firstDetectedAt ?? now,
         resolvedAt: input.resolvedAt,
         escalated,
-        escalatedAt: escalated ? input.escalatedAt ?? now : input.escalatedAt,
-        escalatedByType: escalated ? input.escalatedByType ?? "agent" : input.escalatedByType,
-        escalatedByAgent: escalated ? input.escalatedByAgent ?? "compliance" : input.escalatedByAgent,
+        escalatedAt: escalated ? (input.escalatedAt ?? now) : input.escalatedAt,
+        escalatedByType: escalated
+          ? (input.escalatedByType ?? "agent")
+          : input.escalatedByType,
+        escalatedByAgent: escalated
+          ? (input.escalatedByAgent ?? "compliance")
+          : input.escalatedByAgent,
         escalationReason: input.escalationReason,
         note: input.note,
       } satisfies Partial<typeof careException.$inferInsert> as any;
 
-      const [row] = await ctx.db.insert(careException).values(insertData).returning();
+      const [row] = await ctx.db
+        .insert(careException)
+        .values(insertData)
+        .returning();
       return row;
     }),
 
@@ -207,7 +291,7 @@ export const careExceptionRouter = router({
         escalatedByAgent: EscalatedByAgentEnum.optional(),
         escalationReason: z.string().optional(),
         note: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const now = new Date();
@@ -222,14 +306,22 @@ export const careExceptionRouter = router({
       if (input.type !== undefined) updateData.type = input.type;
       if (nextSeverity !== undefined) updateData.severity = nextSeverity;
       if (input.status !== undefined) updateData.status = input.status;
-      if (input.firstDetectedAt !== undefined) updateData.firstDetectedAt = input.firstDetectedAt;
-      if (input.lastDetectedAt !== undefined) updateData.lastDetectedAt = input.lastDetectedAt;
-      if (input.resolvedAt !== undefined) updateData.resolvedAt = input.resolvedAt;
+      if (input.firstDetectedAt !== undefined)
+        updateData.firstDetectedAt = input.firstDetectedAt;
+      if (input.lastDetectedAt !== undefined)
+        updateData.lastDetectedAt = input.lastDetectedAt;
+      if (input.resolvedAt !== undefined)
+        updateData.resolvedAt = input.resolvedAt;
       if (input.escalated !== undefined) updateData.escalated = input.escalated;
-      if (input.escalatedAt !== undefined) updateData.escalatedAt = input.escalatedAt ?? (input.escalated ? now : null);
-      if (input.escalatedByType !== undefined) updateData.escalatedByType = input.escalatedByType;
-      if (input.escalatedByAgent !== undefined) updateData.escalatedByAgent = input.escalatedByAgent;
-      if (input.escalationReason !== undefined) updateData.escalationReason = input.escalationReason;
+      if (input.escalatedAt !== undefined)
+        updateData.escalatedAt =
+          input.escalatedAt ?? (input.escalated ? now : null);
+      if (input.escalatedByType !== undefined)
+        updateData.escalatedByType = input.escalatedByType;
+      if (input.escalatedByAgent !== undefined)
+        updateData.escalatedByAgent = input.escalatedByAgent;
+      if (input.escalationReason !== undefined)
+        updateData.escalationReason = input.escalationReason;
       if (input.note !== undefined) updateData.note = input.note;
 
       // Auto-set resolvedAt if status is resolved and resolvedAt not provided

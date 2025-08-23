@@ -28,16 +28,15 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
-  uuid,
-  real,
 } from "drizzle-orm/pg-core";
+import { carePlan } from "./care-plan";
 import { organization } from "./organization";
+import { patient } from "./patient";
 import { team } from "./team";
 import { user } from "./user";
-import { patient } from "./patient";
-import { carePlan } from "./care-plan";
 
 // Enums for type safety
 export const taskStatusEnum = pgEnum("task_status", [
@@ -64,16 +63,10 @@ export const taskPriorityEnum = pgEnum("task_priority", [
 ]);
 
 export const taskCategoryEnum = pgEnum("task_category", [
-  "Medication",
-  "Assessment",
   "Education",
-  "Monitoring",
-  "Procedure",
-  "Documentation",
-  "Communication",
-  "Discharge",
-  "Follow-up",
-  "Other",
+  "Lifestyle/Health",
+  "Logistics",
+  "Medical",
 ]);
 
 export const dependencyTypeEnum = pgEnum("dependency_type", [
@@ -119,36 +112,38 @@ export const taskSpecification = pgTable(
     category: taskCategoryEnum("category").notNull(),
     instructionPatient: text("instruction_patient").notNull(),
     instructionClinician: text("instruction_clinician").notNull(),
-    
+
     // Timing configuration
     timingOffsetDays: integer("timing_offset_days").notNull(),
     timingDurationDays: integer("timing_duration_days").notNull(),
     timingTimeOfDay: text("timing_time_of_day"),
     timingIsFlexible: boolean("timing_is_flexible").default(false),
-    
+
     // Conditional logic (stored as JSONB for flexibility)
     conditions: jsonb("conditions").notNull(), // medications, surgery_types, comorbidities, etc.
-    
+
     // Evidence and references
     evidenceSource: text("evidence_source").notNull(),
     evidenceUrl: text("evidence_url").notNull(),
     evidenceLevel: text("evidence_level"),
     evidencePublicationDate: text("evidence_publication_date"),
     evidenceNotes: text("evidence_notes"),
-    
+
     // Status and lifecycle
     status: taskStatusEnum("status").notNull().default("pending"),
     priority: taskPriorityEnum("priority").default("medium"),
-    versionStatus: taskVersionStatusEnum("version_status").notNull().default("draft"),
+    versionStatus: taskVersionStatusEnum("version_status")
+      .notNull()
+      .default("draft"),
     version: text("version").notNull().default("1.0.0"),
     isActive: boolean("is_active").notNull().default(true),
     isTemplate: boolean("is_template").notNull().default(true),
-    
+
     // Validation status
     isValid: boolean("is_valid").notNull().default(false),
     validationErrors: jsonb("validation_errors"),
     validationScore: real("validation_score").default(0),
-    
+
     // Organization and ownership
     organizationId: text("organization_id")
       .notNull()
@@ -156,11 +151,11 @@ export const taskSpecification = pgTable(
     teamId: text("team_id").references(() => team.id, {
       onDelete: "set null",
     }),
-    
+
     // Additional metadata
     metadata: jsonb("metadata"),
     searchVector: text("search_vector"), // Full-text search
-    
+
     // Timestamps and audit
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
@@ -182,14 +177,19 @@ export const taskSpecification = pgTable(
     categoryIdx: index("task_spec_category_idx").on(table.category),
     statusIdx: index("task_spec_status_idx").on(table.status),
     priorityIdx: index("task_spec_priority_idx").on(table.priority),
-    versionStatusIdx: index("task_spec_version_status_idx").on(table.versionStatus),
+    versionStatusIdx: index("task_spec_version_status_idx").on(
+      table.versionStatus,
+    ),
     orgIdx: index("task_spec_org_idx").on(table.organizationId),
     teamIdx: index("task_spec_team_idx").on(table.teamId),
     activeIdx: index("task_spec_active_idx").on(table.isActive),
     validIdx: index("task_spec_valid_idx").on(table.isValid),
     searchIdx: index("task_spec_search_idx").on(table.searchVector),
-    conditionsIdx: index("task_spec_conditions_idx").using("gin", table.conditions),
-  })
+    conditionsIdx: index("task_spec_conditions_idx").using(
+      "gin",
+      table.conditions,
+    ),
+  }),
 );
 
 /**
@@ -206,12 +206,14 @@ export const taskVersion = pgTable(
       .notNull()
       .references(() => taskSpecification.id, { onDelete: "cascade" }),
     version: text("version").notNull(),
-    versionStatus: taskVersionStatusEnum("version_status").notNull().default("draft"),
+    versionStatus: taskVersionStatusEnum("version_status")
+      .notNull()
+      .default("draft"),
     taskData: jsonb("task_data").notNull(), // Complete task specification at this version
     changeDescription: text("change_description"),
     changesSummary: jsonb("changes_summary"), // Structured diff
     isActive: boolean("is_active").notNull().default(false),
-    
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -222,12 +224,14 @@ export const taskVersion = pgTable(
   (table) => ({
     taskVersionIdx: index("task_version_task_idx").on(
       table.taskSpecificationId,
-      table.version
+      table.version,
     ),
-    versionStatusIdx: index("task_version_version_status_idx").on(table.versionStatus),
+    versionStatusIdx: index("task_version_version_status_idx").on(
+      table.versionStatus,
+    ),
     activeIdx: index("task_version_active_idx").on(table.isActive),
     createdAtIdx: index("task_version_created_idx").on(table.createdAt),
-  })
+  }),
 );
 
 /**
@@ -250,7 +254,7 @@ export const taskDependency = pgTable(
     delayDays: integer("delay_days").default(0),
     condition: text("condition"), // Optional condition for dependency
     isActive: boolean("is_active").notNull().default(true),
-    
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -260,10 +264,12 @@ export const taskDependency = pgTable(
   },
   (table) => ({
     sourceIdx: index("task_dependency_source_idx").on(table.sourceTaskId),
-    dependentIdx: index("task_dependency_dependent_idx").on(table.dependentTaskId),
+    dependentIdx: index("task_dependency_dependent_idx").on(
+      table.dependentTaskId,
+    ),
     typeIdx: index("task_dependency_type_idx").on(table.dependencyType),
     activeIdx: index("task_dependency_active_idx").on(table.isActive),
-  })
+  }),
 );
 
 /**
@@ -288,18 +294,24 @@ export const taskAssignment = pgTable(
     assignedTo: text("assigned_to")
       .notNull()
       .references(() => user.id),
-    
+
     // Calculated dates based on task timing and care plan
-    scheduledDate: timestamp("scheduled_date", { withTimezone: true, mode: "date" }),
+    scheduledDate: timestamp("scheduled_date", {
+      withTimezone: true,
+      mode: "date",
+    }),
     dueDate: timestamp("due_date", { withTimezone: true, mode: "date" }),
-    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
-    
+    completedAt: timestamp("completed_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+
     // Status and execution
     status: taskStatusEnum("status").notNull().default("pending"),
     executionContext: jsonb("execution_context"), // Patient/surgery context at assignment
     overrideInstructions: jsonb("override_instructions"), // Custom instructions for this assignment
     notes: text("notes"),
-    
+
     // Assignment metadata
     assignedAt: timestamp("assigned_at", { withTimezone: true, mode: "date" })
       .defaultNow()
@@ -312,11 +324,15 @@ export const taskAssignment = pgTable(
     taskIdx: index("task_assignment_task_idx").on(table.taskSpecificationId),
     carePlanIdx: index("task_assignment_care_plan_idx").on(table.carePlanId),
     patientIdx: index("task_assignment_patient_idx").on(table.patientId),
-    assignedToIdx: index("task_assignment_assigned_to_idx").on(table.assignedTo),
+    assignedToIdx: index("task_assignment_assigned_to_idx").on(
+      table.assignedTo,
+    ),
     statusIdx: index("task_assignment_status_idx").on(table.status),
     dueDateIdx: index("task_assignment_due_date_idx").on(table.dueDate),
-    scheduledDateIdx: index("task_assignment_scheduled_idx").on(table.scheduledDate),
-  })
+    scheduledDateIdx: index("task_assignment_scheduled_idx").on(
+      table.scheduledDate,
+    ),
+  }),
 );
 
 /**
@@ -332,27 +348,30 @@ export const taskExecution = pgTable(
     taskAssignmentId: text("task_assignment_id")
       .notNull()
       .references(() => taskAssignment.id, { onDelete: "cascade" }),
-    
+
     // Execution details
     startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
-    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
+    completedAt: timestamp("completed_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     actualDuration: integer("actual_duration_minutes"),
-    
+
     // Execution results
     status: taskStatusEnum("status").notNull(),
     outcome: text("outcome"), // Success, partial, failed, etc.
     notes: text("notes"),
     complications: text("complications"),
-    
+
     // Evidence and documentation
     documentation: jsonb("documentation"), // Photos, forms, measurements, etc.
     verificationRequired: boolean("verification_required").default(false),
     verifiedBy: text("verified_by").references(() => user.id),
     verifiedAt: timestamp("verified_at", { withTimezone: true, mode: "date" }),
-    
+
     // Execution context
     executionContext: jsonb("execution_context"),
-    
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -361,13 +380,17 @@ export const taskExecution = pgTable(
       .references(() => user.id),
   },
   (table) => ({
-    assignmentIdx: index("task_execution_assignment_idx").on(table.taskAssignmentId),
+    assignmentIdx: index("task_execution_assignment_idx").on(
+      table.taskAssignmentId,
+    ),
     statusIdx: index("task_execution_status_idx").on(table.status),
     executedByIdx: index("task_execution_executed_by_idx").on(table.executedBy),
     startedAtIdx: index("task_execution_started_idx").on(table.startedAt),
     completedAtIdx: index("task_execution_completed_idx").on(table.completedAt),
-    verificationIdx: index("task_execution_verification_idx").on(table.verificationRequired),
-  })
+    verificationIdx: index("task_execution_verification_idx").on(
+      table.verificationRequired,
+    ),
+  }),
 );
 
 /**
@@ -383,24 +406,24 @@ export const taskValidation = pgTable(
     taskSpecificationId: text("task_specification_id")
       .notNull()
       .references(() => taskSpecification.id, { onDelete: "cascade" }),
-    
+
     // Validation results
     isValid: boolean("is_valid").notNull(),
     validationScore: real("validation_score").notNull(),
     errors: jsonb("errors").notNull(),
     warnings: jsonb("warnings").notNull(),
-    
+
     // Detailed validation breakdown
     structureValid: boolean("structure_valid").notNull(),
     timingValid: boolean("timing_valid").notNull(),
     conditionsValid: boolean("conditions_valid").notNull(),
     evidenceValid: boolean("evidence_valid").notNull(),
     dependenciesValid: boolean("dependencies_valid").notNull(),
-    
+
     // Validation metadata
     validationRules: jsonb("validation_rules"), // Rules used for validation
     validationContext: jsonb("validation_context"), // Context during validation
-    
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -413,7 +436,7 @@ export const taskValidation = pgTable(
     validIdx: index("task_validation_valid_idx").on(table.isValid),
     scoreIdx: index("task_validation_score_idx").on(table.validationScore),
     createdAtIdx: index("task_validation_created_idx").on(table.createdAt),
-  })
+  }),
 );
 
 /**
@@ -427,35 +450,40 @@ export const taskImportBatch = pgTable(
       .primaryKey()
       .default(sql`uuid_generate_v7()`),
     batchDescription: text("batch_description"),
-    
+
     // Import statistics
     totalTasks: integer("total_tasks").notNull(),
     importedCount: integer("imported_count").notNull().default(0),
     failedCount: integer("failed_count").notNull().default(0),
     skippedCount: integer("skipped_count").notNull().default(0),
-    
+
     // Import configuration
-    validateBeforeImport: boolean("validate_before_import").notNull().default(true),
+    validateBeforeImport: boolean("validate_before_import")
+      .notNull()
+      .default(true),
     overwriteExisting: boolean("overwrite_existing").notNull().default(false),
-    
+
     // Import status and results
     status: importStatusEnum("status").notNull().default("pending"),
     importResults: jsonb("import_results"), // Detailed results per task
     errorLog: jsonb("error_log"), // Import errors and warnings
-    
+
     // Source information
     sourceFile: text("source_file"),
     sourceFormat: text("source_format").default("json"),
-    
+
     // Organization context
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    
+
     // Processing timestamps
     startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
-    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
-    
+    completedAt: timestamp("completed_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -466,9 +494,11 @@ export const taskImportBatch = pgTable(
   (table) => ({
     statusIdx: index("task_import_batch_status_idx").on(table.status),
     orgIdx: index("task_import_batch_org_idx").on(table.organizationId),
-    importedByIdx: index("task_import_batch_imported_by_idx").on(table.importedBy),
+    importedByIdx: index("task_import_batch_imported_by_idx").on(
+      table.importedBy,
+    ),
     createdAtIdx: index("task_import_batch_created_idx").on(table.createdAt),
-  })
+  }),
 );
 
 /**
@@ -480,28 +510,28 @@ export const taskAuditLog = pgTable(
     id: text("id")
       .primaryKey()
       .default(sql`uuid_generate_v7()`),
-    
+
     // Entity being audited
     entityType: text("entity_type").notNull(), // task_specification, task_assignment, etc.
     entityId: text("entity_id").notNull(),
-    
+
     // Action details
     action: taskAuditActionEnum("action").notNull(),
     description: text("description"),
-    
+
     // Change tracking
     oldValues: jsonb("old_values"),
     newValues: jsonb("new_values"),
     changes: jsonb("changes"), // Structured diff
-    
+
     // Session and context
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     sessionId: text("session_id"),
-    
+
     // Additional metadata
     metadata: jsonb("metadata"),
-    
+
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()
       .notNull(),
@@ -510,11 +540,14 @@ export const taskAuditLog = pgTable(
       .references(() => user.id),
   },
   (table) => ({
-    entityIdx: index("task_audit_entity_idx").on(table.entityType, table.entityId),
+    entityIdx: index("task_audit_entity_idx").on(
+      table.entityType,
+      table.entityId,
+    ),
     actionIdx: index("task_audit_action_idx").on(table.action),
     userIdx: index("task_audit_user_idx").on(table.userId),
     createdAtIdx: index("task_audit_created_idx").on(table.createdAt),
-  })
+  }),
 );
 
 // —————————————————————————————————————————————————————————————————————————————
@@ -551,7 +584,7 @@ export const taskSpecificationRelations = relations(
     }),
     assignments: many(taskAssignment),
     validations: many(taskValidation),
-  })
+  }),
 );
 
 export const taskVersionRelations = relations(taskVersion, ({ one }) => ({
@@ -608,7 +641,7 @@ export const taskAssignmentRelations = relations(
       relationName: "assigner",
     }),
     executions: many(taskExecution),
-  })
+  }),
 );
 
 export const taskExecutionRelations = relations(taskExecution, ({ one }) => ({
@@ -650,7 +683,7 @@ export const taskImportBatchRelations = relations(
       fields: [taskImportBatch.importedBy],
       references: [user.id],
     }),
-  })
+  }),
 );
 
 export const taskAuditLogRelations = relations(taskAuditLog, ({ one }) => ({

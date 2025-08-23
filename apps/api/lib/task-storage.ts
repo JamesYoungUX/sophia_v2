@@ -1,31 +1,38 @@
 /**
  * Task Storage Service
- * 
+ *
  * Provides CRUD operations and querying capabilities for task specifications
  * with version control and audit trails.
  */
 
-import { eq, and, or, desc, asc, like, inArray } from "drizzle-orm";
 import type { DbSchema } from "@repo/db";
 import { schema } from "@repo/db";
+import { and, asc, desc, eq, like, or } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type {
-  TaskSpecification,
-  TaskValidationResult,
-  TaskImportResult,
-  TaskBatchImportResult,
-  TaskStatus,
-  TaskPriority,
   TaskCategory,
+  TaskPriority,
+  TaskSpecification,
+  TaskStatus,
   TaskVersionStatus,
-  DependencyType,
 } from "../types/task-management";
 
-type AuditAction = 'created' | 'updated' | 'deleted' | 'activated' | 'deactivated' | 'validated' | 'assigned' | 'executed' | 'completed' | 'failed';
+type AuditAction =
+  | "created"
+  | "updated"
+  | "deleted"
+  | "activated"
+  | "deactivated"
+  | "validated"
+  | "assigned"
+  | "executed"
+  | "completed"
+  | "failed";
 
 const DEBUG_LOG = false;
 
-if (DEBUG_LOG) console.log("TaskStorageService: Initializing task storage service");
+if (DEBUG_LOG)
+  console.log("TaskStorageService: Initializing task storage service");
 
 export interface TaskQueryOptions {
   organizationId?: string;
@@ -39,41 +46,39 @@ export interface TaskQueryOptions {
   searchTerm?: string;
   limit?: number;
   offset?: number;
-  sortBy?: 'name' | 'category' | 'priority' | 'createdAt' | 'updatedAt';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "name" | "category" | "priority" | "createdAt" | "updatedAt";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface TaskCreateData {
   taskId: string;
   name: string;
   category: TaskCategory;
-  instructionPatient: string;
-  instructionClinician: string;
-  timing?: {
-    offsetDays?: number;
-    durationDays?: number;
-    timeOfDay?: string;
-    isFlexible?: boolean;
-  };
-  conditions?: {
-    medications?: string[];
-    surgery_types?: string[];
-    comorbidities?: string[];
-  };
-  evidence?: {
-    source?: string;
-    url?: string;
-    level?: string;
-    publicationDate?: string;
-    notes?: string;
-  };
   status?: TaskStatus;
   priority?: TaskPriority;
   versionStatus?: TaskVersionStatus;
-  version?: string;
+  instructionPatient: string;
+  instructionClinician: string;
+  timingOffsetDays?: number;
+  timingDurationDays?: number;
+  timingTimeOfDay?: string;
+  timingIsFlexible?: boolean;
+  conditions?: Record<string, any>;
+  evidenceSource?: string;
+  evidenceUrl?: string;
+  evidenceLevel?: string;
+  evidencePublicationDate?: string;
+  evidenceNotes?: string;
+  isActive?: boolean;
   isTemplate?: boolean;
-  teamId?: string;
-  metadata?: Record<string, unknown>;
+  isValid?: boolean;
+  metadata?: {
+    description?: string;
+    estimatedDuration?: string;
+    dependencies?: string[];
+    completionCriteria?: string;
+    tags?: string[];
+  };
 }
 
 export class TaskStorageService {
@@ -87,9 +92,13 @@ export class TaskStorageService {
   async createTask(
     taskData: TaskCreateData,
     organizationId: string,
-    userId: string
+    userId: string,
   ): Promise<TaskSpecification> {
-    if (DEBUG_LOG) console.log("TaskStorageService: Creating task", { taskId: taskData.taskId, name: taskData.name });
+    if (DEBUG_LOG)
+      console.log("TaskStorageService: Creating task", {
+        taskId: taskData.taskId,
+        name: taskData.name,
+      });
 
     const taskId = crypto.randomUUID();
     const now = new Date();
@@ -103,30 +112,31 @@ export class TaskStorageService {
           taskId: taskData.taskId,
           name: taskData.name,
           category: taskData.category,
+          status: taskData.status || "pending",
+          priority: taskData.priority || "medium",
+          versionStatus: taskData.versionStatus || "draft",
           instructionPatient: taskData.instructionPatient,
           instructionClinician: taskData.instructionClinician,
-          timingOffsetDays: taskData.timing?.offsetDays || 0,
-          timingDurationDays: taskData.timing?.durationDays || 1,
-          timingTimeOfDay: taskData.timing?.timeOfDay,
-          timingIsFlexible: taskData.timing?.isFlexible || false,
-          conditions: {
-            medications: taskData.conditions?.medications || [],
-            surgery_types: taskData.conditions?.surgery_types || [],
-            comorbidities: taskData.conditions?.comorbidities || [],
-          },
-          evidenceSource: taskData.evidence?.source || '',
-          evidenceUrl: taskData.evidence?.url || '',
-          evidenceLevel: taskData.evidence?.level,
-          evidencePublicationDate: taskData.evidence?.publicationDate,
-          evidenceNotes: taskData.evidence?.notes,
-          status: taskData.status || 'pending',
-          priority: taskData.priority || 'medium',
-          versionStatus: taskData.versionStatus || 'draft',
-          version: taskData.version || '1.0.0',
-          isTemplate: taskData.isTemplate || false,
+          timingOffsetDays: taskData.timingOffsetDays || 0,
+          timingDurationDays: taskData.timingDurationDays || 1,
+          timingTimeOfDay: taskData.timingTimeOfDay || "any",
+          timingIsFlexible: taskData.timingIsFlexible ?? true,
+          conditions: taskData.conditions || {},
+          evidenceSource: taskData.evidenceSource || "",
+          evidenceUrl: taskData.evidenceUrl || "",
+          evidenceLevel: taskData.evidenceLevel || "Level 3",
+          evidencePublicationDate: taskData.evidencePublicationDate,
+          evidenceNotes: taskData.evidenceNotes,
+          version: "1.0.0",
+          isActive: taskData.isActive ?? true,
+          isTemplate: taskData.isTemplate ?? true,
+          isValid: taskData.isValid ?? false,
+          validationErrors: null,
+          validationScore: 0,
           organizationId,
-          teamId: taskData.teamId,
+          teamId: null,
           metadata: taskData.metadata,
+          searchVector: null,
           createdBy: userId,
           updatedBy: userId,
           createdAt: now,
@@ -138,7 +148,7 @@ export class TaskStorageService {
       await this.db.insert(schema.taskVersion).values({
         taskSpecificationId: insertedTask.id,
         version: insertedTask.version,
-        taskData: taskData as any,
+        taskData: insertedTask as any,
         changeDescription: "Initial version",
         isActive: true,
         createdBy: userId,
@@ -146,20 +156,26 @@ export class TaskStorageService {
 
       // Create audit log
       await this.createAuditLog({
-        entityType: 'task_specification',
+        entityType: "task_specification",
         entityId: insertedTask.id,
-        action: 'created',
+        action: "created",
         description: `Task '${taskData.name}' created`,
         newValues: insertedTask,
         userId,
       });
 
-      if (DEBUG_LOG) console.log("TaskStorageService: Task created successfully", { id: insertedTask.id });
-      
+      if (DEBUG_LOG)
+        console.log("TaskStorageService: Task created successfully", {
+          id: insertedTask.id,
+        });
+
       return this.mapDbTaskToInterface(insertedTask);
     } catch (error) {
-      if (DEBUG_LOG) console.error("TaskStorageService: Error creating task", error);
-      throw new Error(`Failed to create task: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (DEBUG_LOG)
+        console.error("TaskStorageService: Error creating task", error);
+      throw new Error(
+        `Failed to create task: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -169,29 +185,55 @@ export class TaskStorageService {
   async updateTask(
     taskId: string,
     updates: Partial<TaskCreateData>,
-    userId: string
+    userId: string,
   ): Promise<TaskSpecification> {
-    if (DEBUG_LOG) console.log("TaskStorageService: Updating task", { taskId, updates });
+    if (DEBUG_LOG)
+      console.log("TaskStorageService: Updating task", { taskId, updates });
 
     const now = new Date();
 
     const updateData = {
       ...(updates.name && { name: updates.name }),
       ...(updates.category && { category: updates.category }),
-      ...(updates.instructionPatient && { instructionPatient: updates.instructionPatient }),
-      ...(updates.instructionClinician && { instructionClinician: updates.instructionClinician }),
-      ...(updates.timing?.offsetDays !== undefined && { timingOffsetDays: updates.timing.offsetDays }),
-      ...(updates.timing?.durationDays !== undefined && { timingDurationDays: updates.timing.durationDays }),
-      ...(updates.conditions && { conditions: {
-        medications: updates.conditions.medications || [],
-        surgery_types: updates.conditions.surgery_types || [],
-        comorbidities: updates.conditions.comorbidities || [],
-      } }),
-      ...(updates.evidence?.source && { evidenceSource: updates.evidence.source }),
-      ...(updates.evidence?.url && { evidenceUrl: updates.evidence.url }),
+      ...(updates.instructionPatient && {
+        instructionPatient: updates.instructionPatient,
+      }),
+      ...(updates.instructionClinician && {
+        instructionClinician: updates.instructionClinician,
+      }),
+      ...(updates.timingOffsetDays !== undefined && {
+        timingOffsetDays: updates.timingOffsetDays,
+      }),
+      ...(updates.timingDurationDays !== undefined && {
+        timingDurationDays: updates.timingDurationDays,
+      }),
+      ...(updates.timingTimeOfDay && {
+        timingTimeOfDay: updates.timingTimeOfDay,
+      }),
+      ...(updates.timingIsFlexible !== undefined && {
+        timingIsFlexible: updates.timingIsFlexible,
+      }),
+      ...(updates.conditions && {
+        conditions: updates.conditions,
+      }),
+      ...(updates.evidenceSource && {
+        evidenceSource: updates.evidenceSource,
+      }),
+      ...(updates.evidenceUrl && { evidenceUrl: updates.evidenceUrl }),
+      ...(updates.evidenceLevel && { evidenceLevel: updates.evidenceLevel }),
+      ...(updates.evidencePublicationDate && {
+        evidencePublicationDate: updates.evidencePublicationDate,
+      }),
+      ...(updates.evidenceNotes && { evidenceNotes: updates.evidenceNotes }),
       ...(updates.status && { status: updates.status }),
       ...(updates.priority && { priority: updates.priority }),
-      ...(updates.isTemplate !== undefined && { isTemplate: updates.isTemplate }),
+      ...(updates.versionStatus && { versionStatus: updates.versionStatus }),
+      ...(updates.isActive !== undefined && { isActive: updates.isActive }),
+      ...(updates.isTemplate !== undefined && {
+        isTemplate: updates.isTemplate,
+      }),
+      ...(updates.isValid !== undefined && { isValid: updates.isValid }),
+      ...(updates.metadata && { metadata: updates.metadata }),
       updatedBy: userId,
       updatedAt: now,
     };
@@ -211,20 +253,26 @@ export class TaskStorageService {
 
       // Create audit log
       await this.createAuditLog({
-        entityType: 'task_specification',
+        entityType: "task_specification",
         entityId: taskId,
-        action: 'updated',
+        action: "updated",
         description: `Task '${updatedTask.name}' updated`,
         newValues: updateData,
         userId,
       });
 
-      if (DEBUG_LOG) console.log("TaskStorageService: Task updated successfully", { id: taskId });
-      
+      if (DEBUG_LOG)
+        console.log("TaskStorageService: Task updated successfully", {
+          id: taskId,
+        });
+
       return this.mapDbTaskToInterface(updatedTask);
     } catch (error) {
-      if (DEBUG_LOG) console.error("TaskStorageService: Error updating task", error);
-      throw new Error(`Failed to update task: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (DEBUG_LOG)
+        console.error("TaskStorageService: Error updating task", error);
+      throw new Error(
+        `Failed to update task: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -232,7 +280,8 @@ export class TaskStorageService {
    * Get a task by ID
    */
   async getTaskById(taskId: string): Promise<TaskSpecification | null> {
-    if (DEBUG_LOG) console.log("TaskStorageService: Getting task by ID", { taskId });
+    if (DEBUG_LOG)
+      console.log("TaskStorageService: Getting task by ID", { taskId });
 
     try {
       const result = await this.db
@@ -242,21 +291,27 @@ export class TaskStorageService {
         .limit(1);
 
       if (result.length === 0) {
-        if (DEBUG_LOG) console.log("TaskStorageService: Task not found", { taskId });
+        if (DEBUG_LOG)
+          console.log("TaskStorageService: Task not found", { taskId });
         return null;
       }
 
       return this.mapDbTaskToInterface(result[0]);
     } catch (error) {
-      if (DEBUG_LOG) console.error("TaskStorageService: Error getting task", error);
-      throw new Error(`Failed to get task: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (DEBUG_LOG)
+        console.error("TaskStorageService: Error getting task", error);
+      throw new Error(
+        `Failed to get task: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
   /**
    * Query tasks with filtering and pagination
    */
-  async queryTasks(options: TaskQueryOptions = {}): Promise<TaskSpecification[]> {
+  async queryTasks(
+    options: TaskQueryOptions = {},
+  ): Promise<TaskSpecification[]> {
     if (DEBUG_LOG) console.log("TaskStorageService: Querying tasks", options);
 
     try {
@@ -264,46 +319,64 @@ export class TaskStorageService {
 
       // Build where conditions
       const conditions = [];
-      
+
       if (options.organizationId) {
-        conditions.push(eq(schema.taskSpecification.organizationId, options.organizationId));
+        conditions.push(
+          eq(schema.taskSpecification.organizationId, options.organizationId),
+        );
       }
-      
+
       if (options.teamId) {
         conditions.push(eq(schema.taskSpecification.teamId, options.teamId));
       }
-      
+
       if (options.category) {
-        conditions.push(eq(schema.taskSpecification.category, options.category));
+        conditions.push(
+          eq(schema.taskSpecification.category, options.category),
+        );
       }
-      
+
       if (options.status) {
         conditions.push(eq(schema.taskSpecification.status, options.status));
       }
-      
+
       if (options.priority) {
-        conditions.push(eq(schema.taskSpecification.priority, options.priority));
+        conditions.push(
+          eq(schema.taskSpecification.priority, options.priority),
+        );
       }
-      
+
       if (options.isTemplate !== undefined) {
-        conditions.push(eq(schema.taskSpecification.isTemplate, options.isTemplate));
+        conditions.push(
+          eq(schema.taskSpecification.isTemplate, options.isTemplate),
+        );
       }
-      
+
       if (options.isActive !== undefined) {
-        conditions.push(eq(schema.taskSpecification.isActive, options.isActive));
+        conditions.push(
+          eq(schema.taskSpecification.isActive, options.isActive),
+        );
       }
-      
+
       if (options.versionStatus) {
-        conditions.push(eq(schema.taskSpecification.versionStatus, options.versionStatus));
+        conditions.push(
+          eq(schema.taskSpecification.versionStatus, options.versionStatus),
+        );
       }
-      
+
       if (options.searchTerm) {
         conditions.push(
           or(
             like(schema.taskSpecification.name, `%${options.searchTerm}%`),
-            like(schema.taskSpecification.instructionPatient, `%${options.searchTerm}%`),
-            like(schema.taskSpecification.instructionClinician, `%${options.searchTerm}%`)
-          )
+            like(
+              schema.taskSpecification.instructionPatient,
+              `%${options.searchTerm}%`,
+            ),
+            like(
+              schema.taskSpecification.instructionClinician,
+              `%${options.searchTerm}%`,
+            ),
+          ),
         );
       }
 
@@ -312,32 +385,40 @@ export class TaskStorageService {
       }
 
       // Add sorting
-      const sortColumn = options.sortBy || 'createdAt';
-      const sortDirection = options.sortOrder || 'desc';
-      
-      if (sortDirection === 'asc') {
+      const sortColumn = options.sortBy || "createdAt";
+      const sortDirection = options.sortOrder || "desc";
+
+      if (sortDirection === "asc") {
         query = query.orderBy(asc(schema.taskSpecification[sortColumn])) as any;
       } else {
-        query = query.orderBy(desc(schema.taskSpecification[sortColumn])) as any;
+        query = query.orderBy(
+          desc(schema.taskSpecification[sortColumn]),
+        ) as any;
       }
 
       // Add pagination
       if (options.limit) {
         query = query.limit(options.limit) as any;
       }
-      
+
       if (options.offset) {
         query = query.offset(options.offset) as any;
       }
 
       const results = await query;
-      
-      if (DEBUG_LOG) console.log("TaskStorageService: Query completed", { count: results.length });
-      
-      return results.map(task => this.mapDbTaskToInterface(task));
+
+      if (DEBUG_LOG)
+        console.log("TaskStorageService: Query completed", {
+          count: results.length,
+        });
+
+      return results.map((task) => this.mapDbTaskToInterface(task));
     } catch (error) {
-      if (DEBUG_LOG) console.error("TaskStorageService: Error querying tasks", error);
-      throw new Error(`Failed to query tasks: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (DEBUG_LOG)
+        console.error("TaskStorageService: Error querying tasks", error);
+      throw new Error(
+        `Failed to query tasks: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -367,17 +448,50 @@ export class TaskStorageService {
 
       // Create audit log
       await this.createAuditLog({
-        entityType: 'task_specification',
+        entityType: "task_specification",
         entityId: taskId,
-        action: 'deleted',
+        action: "deleted",
         description: `Task '${result[0].name}' deleted`,
         userId,
       });
 
-      if (DEBUG_LOG) console.log("TaskStorageService: Task deleted successfully", { id: taskId });
+      if (DEBUG_LOG)
+        console.log("TaskStorageService: Task deleted successfully", {
+          id: taskId,
+        });
     } catch (error) {
-      if (DEBUG_LOG) console.error("TaskStorageService: Error deleting task", error);
-      throw new Error(`Failed to delete task: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (DEBUG_LOG)
+        console.error("TaskStorageService: Error deleting task", error);
+      throw new Error(
+        `Failed to delete task: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Get care plans that use a specific task
+   */
+  async getPlansUsingTask(taskId: string): Promise<any[]> {
+    try {
+      // This is a placeholder implementation
+      // In a real implementation, you would query the care plan table
+      // to find plans that reference this task in their content or task assignments
+
+      if (DEBUG_LOG)
+        console.log("TaskStorageService: Getting plans using task", { taskId });
+
+      // For now, return an empty array
+      // TODO: Implement actual query to find care plans using this task
+      return [];
+    } catch (error) {
+      if (DEBUG_LOG)
+        console.error(
+          "TaskStorageService: Error getting plans using task",
+          error,
+        );
+      throw new Error(
+        `Failed to get plans using task: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 
@@ -404,7 +518,8 @@ export class TaskStorageService {
         userId: data.userId,
       });
     } catch (error) {
-      if (DEBUG_LOG) console.error("TaskStorageService: Error creating audit log", error);
+      if (DEBUG_LOG)
+        console.error("TaskStorageService: Error creating audit log", error);
       // Don't throw here to avoid breaking the main operation
     }
   }
@@ -418,31 +533,26 @@ export class TaskStorageService {
       taskId: dbTask.taskId,
       name: dbTask.name,
       category: dbTask.category,
-      instructionPatient: dbTask.instructionPatient,
-      instructionClinician: dbTask.instructionClinician,
-      timing: {
-        offsetDays: dbTask.timingOffsetDays,
-        durationDays: dbTask.timingDurationDays,
-        timeOfDay: dbTask.timingTimeOfDay,
-        isFlexible: dbTask.timingIsFlexible,
-      },
-      conditions: {
-        medications: dbTask.conditions?.medications || [],
-        surgery_types: dbTask.conditions?.surgery_types || [],
-        comorbidities: dbTask.conditions?.comorbidities || [],
-      },
-      evidence: {
-        source: dbTask.evidenceSource,
-        url: dbTask.evidenceUrl,
-        level: dbTask.evidenceLevel,
-        publicationDate: dbTask.evidencePublicationDate,
-        notes: dbTask.evidenceNotes,
-      },
       status: dbTask.status,
       priority: dbTask.priority,
       versionStatus: dbTask.versionStatus,
+      instructionPatient: dbTask.instructionPatient,
+      instructionClinician: dbTask.instructionClinician,
+      timingOffsetDays: dbTask.timingOffsetDays,
+      timingDurationDays: dbTask.timingDurationDays,
+      timingTimeOfDay: dbTask.timingTimeOfDay,
+      timingIsFlexible: dbTask.timingIsFlexible,
+      conditions: dbTask.conditions || {},
+      evidenceSource: dbTask.evidenceSource || "",
+      evidenceUrl: dbTask.evidenceUrl || "",
+      evidenceLevel: dbTask.evidenceLevel || "",
+      evidencePublicationDate: dbTask.evidencePublicationDate || "",
+      evidenceNotes: dbTask.evidenceNotes || "",
       version: dbTask.version,
+      isActive: dbTask.isActive,
       isTemplate: dbTask.isTemplate,
+      isValid: dbTask.isValid,
+      metadata: dbTask.metadata || {},
       createdAt: dbTask.createdAt,
       updatedAt: dbTask.updatedAt,
     };

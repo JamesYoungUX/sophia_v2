@@ -15,10 +15,11 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import schema from "../schema";
+import { seedCarePlans } from "../seeds/care-plans";
 import { seedOrganizations } from "../seeds/organizations";
-import { seedUsers } from "../seeds/users";
 import { seedPatients } from "../seeds/patients";
 import { seedTasks } from "../seeds/tasks";
+import { seedUsers } from "../seeds/users";
 
 // Import drizzle config to trigger environment loading
 import "../drizzle.config";
@@ -33,6 +34,7 @@ try {
   await seedUsers(db);
   await seedPatients(db);
   await seedTasks(db);
+  await seedCarePlans(db);
   console.log("✅ Database seeding completed successfully!");
 } catch (error) {
   console.error("❌ Database seeding failed:");

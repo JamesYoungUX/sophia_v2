@@ -1,11 +1,36 @@
-import React, { useState, useCallback } from 'react';
+import { trpc } from "@/lib/trpc";
+import { Badge } from "@repo/ui/components/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@repo/ui/components/breadcrumb";
+import { Button } from "@repo/ui/components/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@repo/ui/components/card';
+} from "@repo/ui/components/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@repo/ui/components/dialog";
+import { Input } from "@repo/ui/components/input";
+import { Label } from "@repo/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
 import {
   Table,
   TableBody,
@@ -13,38 +38,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@repo/ui/components/table';
-import { Button } from '@repo/ui/components/button';
-import { Input } from '@repo/ui/components/input';
-import { Badge } from '@repo/ui/components/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@repo/ui/components/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/select';
-import { Textarea } from '@repo/ui/components/textarea';
-import { Label } from '@repo/ui/components/label';
-import { Separator } from '@repo/ui/components/separator';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@repo/ui/components/breadcrumb';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@repo/ui/components/collapsible';
+} from "@repo/ui/components/table";
+import { Textarea } from "@repo/ui/components/textarea";
 import {
-  Search,
-  Plus,
-  FolderPlus,
-  Filter,
-  MoreHorizontal,
-  ChevronRight,
   ChevronDown,
-  Folder,
-  FileText,
-  Edit,
-  Trash2,
+  ChevronRight,
   Copy,
-  Share,
+  Download,
+  Edit,
+  FileText,
+  Filter,
+  Folder,
+  FolderPlus,
   History,
+  Loader2,
+  Plus,
+  Search,
   Tag,
   Users,
-  Calendar,
-  Eye,
-  Download,
-} from 'lucide-react';
+} from "lucide-react";
+import { useCallback, useState } from "react";
 
 const DEBUG_LOG = true;
 
@@ -66,7 +79,7 @@ interface CarePlan {
   id: string;
   title: string;
   description?: string;
-  status: 'draft' | 'active' | 'archived' | 'under_review';
+  status: "draft" | "active" | "archived" | "under_review";
   categoryId?: string;
   versionNumber: number;
   isTemplate: boolean;
@@ -76,6 +89,7 @@ interface CarePlan {
   createdBy: string;
   updatedBy: string;
   metadata?: Record<string, any>;
+  content?: Record<string, any>; // Add content field for care plan structure
 }
 
 interface SearchFilters {
@@ -90,33 +104,33 @@ interface SearchFilters {
   author?: string;
 }
 
-// Mock data for demonstration
+// Mock categories for now (we'll implement this later)
 const mockCategories: CarePlanCategory[] = [
   {
-    id: '1',
-    name: 'Surgical Procedures',
-    description: 'Care plans for surgical interventions',
-    path: '/surgical-procedures',
+    id: "1",
+    name: "Surgical Procedures",
+    description: "Care plans for surgical interventions",
+    path: "/surgical-procedures",
     level: 0,
     sortOrder: 1,
     isActive: true,
     planCount: 15,
     children: [
       {
-        id: '1-1',
-        name: 'Orthopedic Surgery',
-        parentId: '1',
-        path: '/surgical-procedures/orthopedic',
+        id: "1-1",
+        name: "Orthopedic Surgery",
+        parentId: "1",
+        path: "/surgical-procedures/orthopedic",
         level: 1,
         sortOrder: 1,
         isActive: true,
         planCount: 8,
       },
       {
-        id: '1-2',
-        name: 'Cardiac Surgery',
-        parentId: '1',
-        path: '/surgical-procedures/cardiac',
+        id: "1-2",
+        name: "Cardiac Surgery",
+        parentId: "1",
+        path: "/surgical-procedures/cardiac",
         level: 1,
         sortOrder: 2,
         isActive: true,
@@ -125,57 +139,26 @@ const mockCategories: CarePlanCategory[] = [
     ],
   },
   {
-    id: '2',
-    name: 'Medical Management',
-    description: 'Non-surgical care plans',
-    path: '/medical-management',
+    id: "2",
+    name: "Medical Management",
+    description: "Non-surgical care plans",
+    path: "/medical-management",
     level: 0,
     sortOrder: 2,
     isActive: true,
     planCount: 23,
     children: [
       {
-        id: '2-1',
-        name: 'Chronic Disease Management',
-        parentId: '2',
-        path: '/medical-management/chronic-disease',
+        id: "2-1",
+        name: "Chronic Disease Management",
+        parentId: "2",
+        path: "/medical-management/chronic-disease",
         level: 1,
         sortOrder: 1,
         isActive: true,
         planCount: 12,
       },
     ],
-  },
-];
-
-const mockCarePlans: CarePlan[] = [
-  {
-    id: '1',
-    title: 'Total Knee Arthroplasty (Preoperative)',
-    description: 'Comprehensive preoperative care plan for total knee replacement',
-    status: 'active',
-    categoryId: '1-1',
-    versionNumber: 3,
-    isTemplate: false,
-    tags: ['orthopedic', 'preoperative', 'knee'],
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-06-10'),
-    createdBy: 'Dr. Smith',
-    updatedBy: 'Dr. Johnson',
-  },
-  {
-    id: '2',
-    title: 'Coronary Artery Bypass Graft (Postoperative)',
-    description: 'Postoperative care protocol for CABG patients',
-    status: 'active',
-    categoryId: '1-2',
-    versionNumber: 2,
-    isTemplate: true,
-    tags: ['cardiac', 'postoperative', 'cabg'],
-    createdAt: new Date('2024-02-01'),
-    updatedAt: new Date('2024-06-08'),
-    createdBy: 'Dr. Williams',
-    updatedBy: 'Dr. Brown',
   },
 ];
 
@@ -197,10 +180,12 @@ function CategoryTree({
   onCategoryEdit,
   onCategoryDelete,
 }: CategoryTreeProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['1', '2']));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(["1", "2"]),
+  );
 
   const toggleExpanded = useCallback((categoryId: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(categoryId)) {
         newSet.delete(categoryId);
@@ -220,11 +205,14 @@ function CategoryTree({
       <div key={category.id} className="mb-1">
         <div
           className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-50 cursor-pointer ${
-            isSelected ? 'bg-blue-50 border border-blue-200' : ''
+            isSelected ? "bg-blue-50 border border-blue-200" : ""
           }`}
           style={{ paddingLeft: `${category.level * 16 + 8}px` }}
         >
-          <div className="flex items-center flex-1" onClick={() => onCategorySelect(category.id)}>
+          <div
+            className="flex items-center flex-1"
+            onClick={() => onCategorySelect(category.id)}
+          >
             {hasChildren ? (
               <button
                 onClick={(e) => {
@@ -233,7 +221,11 @@ function CategoryTree({
                 }}
                 className="mr-1 p-1 hover:bg-gray-200 rounded"
               >
-                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {isExpanded ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronRight size={16} />
+                )}
               </button>
             ) : (
               <div className="w-6" />
@@ -270,9 +262,7 @@ function CategoryTree({
           </div>
         </div>
         {hasChildren && isExpanded && (
-          <div>
-            {category.children?.map(renderCategory)}
-          </div>
+          <div>{category.children?.map(renderCategory)}</div>
         )}
       </div>
     );
@@ -299,7 +289,11 @@ interface SearchFiltersProps {
   categories: CarePlanCategory[];
 }
 
-function SearchFilters({ filters, onFiltersChange, categories }: SearchFiltersProps) {
+function SearchFilters({
+  filters,
+  onFiltersChange,
+  categories,
+}: SearchFiltersProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {
@@ -317,7 +311,7 @@ function SearchFilters({ filters, onFiltersChange, categories }: SearchFiltersPr
             onClick={() => setShowAdvanced(!showAdvanced)}
           >
             <Filter size={16} className="mr-2" />
-            {showAdvanced ? 'Hide' : 'Show'} Advanced
+            {showAdvanced ? "Hide" : "Show"} Advanced
           </Button>
         </CardTitle>
       </CardHeader>
@@ -327,16 +321,19 @@ function SearchFilters({ filters, onFiltersChange, categories }: SearchFiltersPr
           <Input
             placeholder="Search care plans..."
             value={filters.query}
-            onChange={(e) => updateFilter('query', e.target.value)}
+            onChange={(e) => updateFilter("query", e.target.value)}
             className="pl-10"
           />
         </div>
-        
+
         {showAdvanced && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
             <div>
               <Label htmlFor="status-filter">Status</Label>
-              <Select value={filters.status} onValueChange={(value) => updateFilter('status', value)}>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => updateFilter("status", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
@@ -349,10 +346,13 @@ function SearchFilters({ filters, onFiltersChange, categories }: SearchFiltersPr
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="category-filter">Category</Label>
-              <Select value={filters.category} onValueChange={(value) => updateFilter('category', value)}>
+              <Select
+                value={filters.category}
+                onValueChange={(value) => updateFilter("category", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
@@ -366,13 +366,13 @@ function SearchFilters({ filters, onFiltersChange, categories }: SearchFiltersPr
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="author-filter">Author</Label>
               <Input
                 placeholder="Filter by author..."
-                value={filters.author || ''}
-                onChange={(e) => updateFilter('author', e.target.value)}
+                value={filters.author || ""}
+                onChange={(e) => updateFilter("author", e.target.value)}
               />
             </div>
           </div>
@@ -385,6 +385,7 @@ function SearchFilters({ filters, onFiltersChange, categories }: SearchFiltersPr
 // Care Plan List Component
 interface CarePlanListProps {
   plans: CarePlan[];
+  isLoading: boolean;
   onPlanSelect: (plan: CarePlan) => void;
   onPlanEdit: (plan: CarePlan) => void;
   onPlanDelete: (planId: string) => void;
@@ -395,6 +396,7 @@ interface CarePlanListProps {
 
 function CarePlanList({
   plans,
+  isLoading,
   onPlanSelect,
   onPlanEdit,
   onPlanDelete,
@@ -404,13 +406,27 @@ function CarePlanList({
 }: CarePlanListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'under_review': return 'bg-blue-100 text-blue-800';
-      case 'archived': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "draft":
+        return "bg-yellow-100 text-yellow-800";
+      case "under_review":
+        return "bg-blue-100 text-blue-800";
+      case "archived":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Loading care plans...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -430,7 +446,10 @@ function CarePlanList({
           </TableHeader>
           <TableBody>
             {plans.map((plan) => (
-              <TableRow key={plan.id} className="cursor-pointer hover:bg-gray-50">
+              <TableRow
+                key={plan.id}
+                className="cursor-pointer hover:bg-gray-50"
+              >
                 <TableCell onClick={() => onPlanSelect(plan)}>
                   <div className="flex items-center space-x-2">
                     <FileText size={16} className="text-blue-600" />
@@ -451,7 +470,7 @@ function CarePlanList({
                 </TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(plan.status)}>
-                    {plan.status.replace('_', ' ')}
+                    {plan.status.replace("_", " ")}
                   </Badge>
                 </TableCell>
                 <TableCell>v{plan.versionNumber}</TableCell>
@@ -471,7 +490,7 @@ function CarePlanList({
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {plan.updatedAt.toLocaleDateString()}
+                    {new Date(plan.updatedAt).toLocaleDateString()}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -479,13 +498,25 @@ function CarePlanList({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-1">
-                    <Button variant="ghost" size="sm" onClick={() => onPlanEdit(plan)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onPlanEdit(plan)}
+                    >
                       <Edit size={14} />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onPlanDuplicate(plan)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onPlanDuplicate(plan)}
+                    >
                       <Copy size={14} />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onVersionHistory(plan)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onVersionHistory(plan)}
+                    >
                       <History size={14} />
                     </Button>
                   </div>
@@ -499,7 +530,10 @@ function CarePlanList({
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-4">
         {plans.map((plan) => (
-          <Card key={plan.id} className="cursor-pointer hover:shadow-md transition-shadow">
+          <Card
+            key={plan.id}
+            className="cursor-pointer hover:shadow-md transition-shadow"
+          >
             <CardHeader onClick={() => onPlanSelect(plan)}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-2">
@@ -507,12 +541,14 @@ function CarePlanList({
                   <div>
                     <CardTitle className="text-base">{plan.title}</CardTitle>
                     {plan.description && (
-                      <p className="text-sm text-gray-500 mt-1">{plan.description}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {plan.description}
+                      </p>
                     )}
                   </div>
                 </div>
                 <Badge className={getStatusColor(plan.status)}>
-                  {plan.status.replace('_', ' ')}
+                  {plan.status.replace("_", " ")}
                 </Badge>
               </div>
             </CardHeader>
@@ -520,7 +556,9 @@ function CarePlanList({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Version: v{plan.versionNumber}</span>
-                  <span>Updated: {plan.updatedAt.toLocaleDateString()}</span>
+                  <span>
+                    Updated: {new Date(plan.updatedAt).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {plan.tags.map((tag) => (
@@ -533,15 +571,29 @@ function CarePlanList({
             </CardContent>
             <CardFooter>
               <div className="flex items-center justify-between w-full">
-                <span className="text-sm text-gray-500">By {plan.updatedBy}</span>
+                <span className="text-sm text-gray-500">
+                  By {plan.updatedBy}
+                </span>
                 <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => onPlanEdit(plan)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onPlanEdit(plan)}
+                  >
                     <Edit size={14} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onPlanDuplicate(plan)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onPlanDuplicate(plan)}
+                  >
                     <Copy size={14} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onVersionHistory(plan)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onVersionHistory(plan)}
+                  >
                     <History size={14} />
                   </Button>
                 </div>
@@ -556,77 +608,86 @@ function CarePlanList({
 
 // Main Care Plan Repository Component
 export function CarePlanRepository() {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('1');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("1");
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
-    query: '',
-    status: 'all',
-    category: 'all',
+    query: "",
+    status: "all",
+    category: "all",
     tags: [],
   });
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
 
-  // Filter plans based on search criteria
-  const filteredPlans = mockCarePlans.filter((plan) => {
-    if (searchFilters.query && !plan.title.toLowerCase().includes(searchFilters.query.toLowerCase())) {
-      return false;
-    }
-    if (searchFilters.status && searchFilters.status !== 'all' && plan.status !== searchFilters.status) {
-      return false;
-    }
-    if (searchFilters.category && searchFilters.category !== 'all' && plan.categoryId !== searchFilters.category) {
-      return false;
-    }
-    return true;
+  // Fetch care plans using tRPC
+  const {
+    data: carePlansData,
+    isLoading,
+    error,
+  } = trpc.carePlan.list.useQuery({
+    query: searchFilters.query,
+    status: searchFilters.status === "all" ? undefined : searchFilters.status,
+    category:
+      searchFilters.category === "all" ? undefined : searchFilters.category,
+    limit: 50,
+    offset: 0,
   });
 
+  const plans = carePlansData?.plans || [];
+  const totalPlans = carePlansData?.pagination?.total || 0;
+
+  if (DEBUG_LOG) {
+    console.log("Care plans data:", carePlansData);
+    console.log("Loading:", isLoading);
+    console.log("Error:", error);
+  }
+
   const handleCategorySelect = useCallback((categoryId: string) => {
-    if (DEBUG_LOG) console.log('Category selected:', categoryId);
+    if (DEBUG_LOG) console.log("Category selected:", categoryId);
     setSelectedCategoryId(categoryId);
   }, []);
 
   const handleCategoryCreate = useCallback((parentId?: string) => {
-    if (DEBUG_LOG) console.log('Create category with parent:', parentId);
+    if (DEBUG_LOG) console.log("Create category with parent:", parentId);
     setShowCategoryDialog(true);
   }, []);
 
   const handleCategoryEdit = useCallback((category: CarePlanCategory) => {
-    if (DEBUG_LOG) console.log('Edit category:', category);
+    if (DEBUG_LOG) console.log("Edit category:", category);
     setShowCategoryDialog(true);
   }, []);
 
   const handleCategoryDelete = useCallback((categoryId: string) => {
-    if (DEBUG_LOG) console.log('Delete category:', categoryId);
+    if (DEBUG_LOG) console.log("Delete category:", categoryId);
     // TODO: Implement category deletion
   }, []);
 
   const handlePlanSelect = useCallback((plan: CarePlan) => {
-    if (DEBUG_LOG) console.log('Plan selected:', plan);
+    if (DEBUG_LOG) console.log("Plan selected:", plan);
     // TODO: Navigate to plan detail view
   }, []);
 
   const handlePlanEdit = useCallback((plan: CarePlan) => {
-    if (DEBUG_LOG) console.log('Edit plan:', plan);
+    if (DEBUG_LOG) console.log("Edit plan:", plan);
     // TODO: Open plan editor
   }, []);
 
   const handlePlanDelete = useCallback((planId: string) => {
-    if (DEBUG_LOG) console.log('Delete plan:', planId);
+    if (DEBUG_LOG) console.log("Delete plan:", planId);
     // TODO: Implement plan deletion
   }, []);
 
   const handlePlanDuplicate = useCallback((plan: CarePlan) => {
-    if (DEBUG_LOG) console.log('Duplicate plan:', plan);
+    if (DEBUG_LOG) console.log("Duplicate plan:", plan);
     // TODO: Implement plan duplication
   }, []);
 
   const handlePlanShare = useCallback((plan: CarePlan) => {
-    if (DEBUG_LOG) console.log('Share plan:', plan);
+    if (DEBUG_LOG) console.log("Share plan:", plan);
     // TODO: Implement plan sharing
   }, []);
 
   const handleVersionHistory = useCallback((plan: CarePlan) => {
-    if (DEBUG_LOG) console.log('View version history:', plan);
+    if (DEBUG_LOG) console.log("View version history:", plan);
     // TODO: Show version history dialog
   }, []);
 
@@ -684,7 +745,7 @@ export function CarePlanRepository() {
         {/* Results Summary */}
         <div className="flex items-center justify-between mb-4">
           <div className="text-sm text-gray-600">
-            Showing {filteredPlans.length} care plans
+            Showing {plans.length} of {totalPlans} care plans
             {searchFilters.query && ` for "${searchFilters.query}"`}
           </div>
           <div className="flex items-center space-x-2">
@@ -699,23 +760,49 @@ export function CarePlanRepository() {
           </div>
         </div>
 
+        {/* Error State */}
+        {error && (
+          <Card className="text-center py-12 border-red-200 bg-red-50">
+            <CardContent>
+              <div className="text-red-600 mb-4">
+                <FileText size={48} className="mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  Error Loading Care Plans
+                </h3>
+                <p className="text-red-500">{error.message}</p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Care Plan List */}
-        <CarePlanList
-          plans={filteredPlans}
-          onPlanSelect={handlePlanSelect}
-          onPlanEdit={handlePlanEdit}
-          onPlanDelete={handlePlanDelete}
-          onPlanDuplicate={handlePlanDuplicate}
-          onPlanShare={handlePlanShare}
-          onVersionHistory={handleVersionHistory}
-        />
+        {!error && (
+          <CarePlanList
+            plans={plans}
+            isLoading={isLoading}
+            onPlanSelect={handlePlanSelect}
+            onPlanEdit={handlePlanEdit}
+            onPlanDelete={handlePlanDelete}
+            onPlanDuplicate={handlePlanDuplicate}
+            onPlanShare={handlePlanShare}
+            onVersionHistory={handleVersionHistory}
+          />
+        )}
 
         {/* Empty State */}
-        {filteredPlans.length === 0 && (
+        {!isLoading && !error && plans.length === 0 && (
           <Card className="text-center py-12">
             <CardContent>
               <FileText size={48} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No care plans found</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                No care plans found
+              </h3>
               <p className="text-gray-600 mb-4">
                 {searchFilters.query
                   ? `No care plans match your search criteria.`
@@ -743,7 +830,10 @@ export function CarePlanRepository() {
             </div>
             <div>
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Enter care plan description..." />
+              <Textarea
+                id="description"
+                placeholder="Enter care plan description..."
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -776,7 +866,10 @@ export function CarePlanRepository() {
               </div>
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={() => setShowCreateDialog(false)}>

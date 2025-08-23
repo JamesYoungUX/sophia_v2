@@ -1,54 +1,48 @@
-import { createFileRoute, useParams } from '@tanstack/react-router';
-import React from 'react';
+import { Badge } from "@repo/ui/components/badge";
+import { Button } from "@repo/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@repo/ui/components/card';
-import { Badge } from '@repo/ui/components/badge';
-import { Button } from '@repo/ui/components/button';
-import { Separator } from '@repo/ui/components/separator';
-import { Label } from '@repo/ui/components/label';
+} from "@repo/ui/components/card";
+import { Label } from "@repo/ui/components/label";
+import { Separator } from "@repo/ui/components/separator";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
+  AlertCircle,
   ArrowLeft,
   Calendar,
   Clock,
   FileText,
   Tag,
   Users,
-  AlertCircle,
-  CheckCircle,
-  Play,
-  Pause,
-  X,
-} from 'lucide-react';
-import { api } from '../lib/trpc';
-import { useNavigate } from '@tanstack/react-router';
+} from "lucide-react";
+import { api } from "../lib/trpc";
 
 const DEBUG_LOG = false;
 
 // Helper function to safely format dates
 const formatDate = (date: Date | string | null | undefined): string => {
-  if (!date) return '- unavailable';
-  
+  if (!date) return "- unavailable";
+
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateObj = typeof date === "string" ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) {
-      if (DEBUG_LOG) console.warn('Invalid date encountered:', date);
-      return '- unavailable';
+      if (DEBUG_LOG) console.warn("Invalid date encountered:", date);
+      return "- unavailable";
     }
     return dateObj.toLocaleDateString();
   } catch (error) {
-    if (DEBUG_LOG) console.error('Error formatting date:', error, date);
-    return '- unavailable';
+    if (DEBUG_LOG) console.error("Error formatting date:", error, date);
+    return "- unavailable";
   }
 };
 
 // Helper function to safely display values
 const safeDisplay = (value: any): string => {
-  if (value === null || value === undefined || value === '') {
-    return '- unavailable';
+  if (value === null || value === undefined || value === "") {
+    return "- unavailable";
   }
   return String(value);
 };
@@ -59,18 +53,21 @@ const safeDisplay = (value: any): string => {
 function PriorityBadge({ priority }: { priority: string }) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case "critical":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   return (
-    <Badge className={`${getPriorityColor(priority)} border`}>
-      {priority}
-    </Badge>
+    <Badge className={`${getPriorityColor(priority)} border`}>{priority}</Badge>
   );
 }
 
@@ -78,10 +75,14 @@ function PriorityBadge({ priority }: { priority: string }) {
 function VersionStatusBadge({ versionStatus }: { versionStatus: string }) {
   const getVersionStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800 border-green-200';
-      case 'draft': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'inactive': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case "active":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "draft":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "inactive":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -92,25 +93,29 @@ function VersionStatusBadge({ versionStatus }: { versionStatus: string }) {
   );
 }
 
-export const Route = createFileRoute('/task-management/$taskId')({
+export const Route = createFileRoute("/task-management/$taskId")({
   component: TaskDetailsPage,
 });
 
 function TaskDetailsPage() {
   const { taskId } = Route.useParams();
   const navigate = useNavigate();
-  
-  if (DEBUG_LOG) console.log('TaskDetailsPage rendering with taskId:', taskId);
-  
+
+  if (DEBUG_LOG) console.log("TaskDetailsPage rendering with taskId:", taskId);
+
   // Use real API data instead of mock data
-  const { data: task, isLoading, error } = api.task.byId.useQuery({ id: taskId });
-  
+  const {
+    data: task,
+    isLoading,
+    error,
+  } = api.task.getById.useQuery({ id: taskId });
+
   if (DEBUG_LOG) {
-    console.log('Task data:', task);
-    console.log('Loading state:', isLoading);
-    console.log('Error state:', error);
+    console.log("Task data:", task);
+    console.log("Loading state:", isLoading);
+    console.log("Error state:", error);
   }
-  
+
   // Handle loading state
   if (isLoading) {
     return (
@@ -122,7 +127,7 @@ function TaskDetailsPage() {
       </div>
     );
   }
-  
+
   // Handle error state
   if (error || !task) {
     return (
@@ -131,9 +136,10 @@ function TaskDetailsPage() {
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Task Not Found</h2>
           <p className="text-muted-foreground mb-4">
-            {error?.message || 'The requested task could not be found or is unavailable.'}
+            {error?.message ||
+              "The requested task could not be found or is unavailable."}
           </p>
-          <Button onClick={() => navigate({ to: '/task-management' })}>
+          <Button onClick={() => navigate({ to: "/task-management" })}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Tasks
           </Button>
@@ -143,7 +149,7 @@ function TaskDetailsPage() {
   }
 
   const handleBackToList = () => {
-    navigate({ to: '/task-management' });
+    navigate({ to: "/task-management" });
   };
 
   return (
@@ -151,16 +157,18 @@ function TaskDetailsPage() {
       {/* Header with back button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleBackToList}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Tasks
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight">{safeDisplay(task.name)}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {safeDisplay(task.name)}
+          </h1>
         </div>
       </div>
 
@@ -179,17 +187,29 @@ function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Task ID</Label>
-                  <p className="font-mono text-sm mt-1">{safeDisplay(task.taskId)}</p>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Task ID
+                  </Label>
+                  <p className="font-mono text-sm mt-1">
+                    {safeDisplay(task.taskId)}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Category</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Category
+                  </Label>
                   <p className="mt-1">{safeDisplay(task.category)}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Priority</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Priority
+                  </Label>
                   <div className="mt-1">
-                    {task.priority ? <PriorityBadge priority={task.priority} /> : <span>- unavailable</span>}
+                    {task.priority ? (
+                      <PriorityBadge priority={task.priority} />
+                    ) : (
+                      <span>- unavailable</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -206,13 +226,21 @@ function TaskDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Patient Instructions</Label>
-                <p className="mt-2 text-sm leading-relaxed">{safeDisplay(task.instructionPatient)}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Patient Instructions
+                </Label>
+                <p className="mt-2 text-sm leading-relaxed">
+                  {safeDisplay(task.instructionPatient)}
+                </p>
               </div>
               <Separator />
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Clinician Instructions</Label>
-                <p className="mt-2 text-sm leading-relaxed">{safeDisplay(task.instructionClinician)}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Clinician Instructions
+                </Label>
+                <p className="mt-2 text-sm leading-relaxed">
+                  {safeDisplay(task.instructionClinician)}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -228,20 +256,44 @@ function TaskDetailsPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Offset Days</Label>
-                  <p className="mt-1">{task.timing?.offsetDays !== undefined ? `${task.timing.offsetDays} days` : '- unavailable'}</p>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Offset Days
+                  </Label>
+                  <p className="mt-1">
+                    {task.timing?.offsetDays !== undefined
+                      ? `${task.timing.offsetDays} days`
+                      : "- unavailable"}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Duration</Label>
-                  <p className="mt-1">{task.timing?.durationDays !== undefined ? `${task.timing.durationDays} day(s)` : '- unavailable'}</p>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Duration
+                  </Label>
+                  <p className="mt-1">
+                    {task.timing?.durationDays !== undefined
+                      ? `${task.timing.durationDays} day(s)`
+                      : "- unavailable"}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Time of Day</Label>
-                  <p className="mt-1">{task.timing?.timeOfDay || '- unavailable'}</p>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Time of Day
+                  </Label>
+                  <p className="mt-1">
+                    {task.timing?.timeOfDay || "- unavailable"}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Flexibility</Label>
-                  <p className="mt-1">{task.timing?.isFlexible !== undefined ? (task.timing.isFlexible ? 'Flexible' : 'Strict') : '- unavailable'}</p>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Flexibility
+                  </Label>
+                  <p className="mt-1">
+                    {task.timing?.isFlexible !== undefined
+                      ? task.timing.isFlexible
+                        ? "Flexible"
+                        : "Strict"
+                      : "- unavailable"}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -260,13 +312,21 @@ function TaskDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Version</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Version
+                </Label>
                 <p className="mt-1 font-mono">{safeDisplay(task.version)}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Status
+                </Label>
                 <div className="mt-1">
-                  {task.versionStatus ? <VersionStatusBadge versionStatus={task.versionStatus} /> : <span>- unavailable</span>}
+                  {task.versionStatus ? (
+                    <VersionStatusBadge versionStatus={task.versionStatus} />
+                  ) : (
+                    <span>- unavailable</span>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -282,44 +342,77 @@ function TaskDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Surgery Types</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Surgery Types
+                </Label>
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {task.conditions?.surgery_types && task.conditions.surgery_types.length > 0 ? (
-                    task.conditions.surgery_types.map((type: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {type}
-                      </Badge>
-                    ))
+                  {task.conditions?.surgery_types &&
+                  task.conditions.surgery_types.length > 0 ? (
+                    task.conditions.surgery_types.map(
+                      (type: string, index: number) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {type}
+                        </Badge>
+                      ),
+                    )
                   ) : (
-                    <span className="text-sm text-muted-foreground">- unavailable</span>
+                    <span className="text-sm text-muted-foreground">
+                      - unavailable
+                    </span>
                   )}
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Medications</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Medications
+                </Label>
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {task.conditions?.medications && task.conditions.medications.length > 0 ? (
-                    task.conditions.medications.map((med: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {med}
-                      </Badge>
-                    ))
+                  {task.conditions?.medications &&
+                  task.conditions.medications.length > 0 ? (
+                    task.conditions.medications.map(
+                      (med: string, index: number) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {med}
+                        </Badge>
+                      ),
+                    )
                   ) : (
-                    <span className="text-sm text-muted-foreground">- unavailable</span>
+                    <span className="text-sm text-muted-foreground">
+                      - unavailable
+                    </span>
                   )}
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Comorbidities</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Comorbidities
+                </Label>
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {task.conditions?.comorbidities && task.conditions.comorbidities.length > 0 ? (
-                    task.conditions.comorbidities.map((condition: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {condition}
-                      </Badge>
-                    ))
+                  {task.conditions?.comorbidities &&
+                  task.conditions.comorbidities.length > 0 ? (
+                    task.conditions.comorbidities.map(
+                      (condition: string, index: number) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {condition}
+                        </Badge>
+                      ),
+                    )
                   ) : (
-                    <span className="text-sm text-muted-foreground">- unavailable</span>
+                    <span className="text-sm text-muted-foreground">
+                      - unavailable
+                    </span>
                   )}
                 </div>
               </div>
@@ -336,20 +429,36 @@ function TaskDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Source</Label>
-                <p className="mt-1 text-sm">{safeDisplay(task.evidence?.source)}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Source
+                </Label>
+                <p className="mt-1 text-sm">
+                  {safeDisplay(task.evidence?.source)}
+                </p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Evidence Level</Label>
-                <p className="mt-1 text-sm">{safeDisplay(task.evidence?.level)}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Evidence Level
+                </Label>
+                <p className="mt-1 text-sm">
+                  {safeDisplay(task.evidence?.level)}
+                </p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Publication Date</Label>
-                <p className="mt-1 text-sm">{formatDate(task.evidence?.publicationDate)}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Publication Date
+                </Label>
+                <p className="mt-1 text-sm">
+                  {formatDate(task.evidence?.publicationDate)}
+                </p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Notes</Label>
-                <p className="mt-1 text-sm leading-relaxed">{safeDisplay(task.evidence?.notes)}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Notes
+                </Label>
+                <p className="mt-1 text-sm leading-relaxed">
+                  {safeDisplay(task.evidence?.notes)}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -364,11 +473,15 @@ function TaskDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Created</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Created
+                </Label>
                 <p className="mt-1 text-sm">{formatDate(task.createdAt)}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Last Updated</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Last Updated
+                </Label>
                 <p className="mt-1 text-sm">{formatDate(task.updatedAt)}</p>
               </div>
             </CardContent>

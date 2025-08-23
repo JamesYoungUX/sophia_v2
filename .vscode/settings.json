@@ -101,5 +101,7 @@
     "vite",
     "vitest",
     "webflow"
-  ]
+  ],
+  "kiroAgent.configureMCP": "Disabled",
+  "cSpell.words": ["shadcn"]
 }

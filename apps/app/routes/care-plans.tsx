@@ -1,512 +1,424 @@
-import React, { useState } from 'react';
+import { requireAuth } from "@/lib/auth-guard";
+import { trpc } from "@/lib/trpc";
+import { Badge } from "@repo/ui/components/badge";
+import { Button } from "@repo/ui/components/button";
+import { Card, CardContent } from "@repo/ui/components/card";
+import { Input } from "@repo/ui/components/input";
+
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from "@tanstack/react-router";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/ui/components/table";
-import { Badge } from '@repo/ui/components/badge';
-import { Button } from '@repo/ui/components/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@repo/ui/components/dialog';
-import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group';
-import { Label } from '@repo/ui/components/label';
-import { Input } from '@repo/ui/components/input';
-import { 
-  Eye, 
-  Edit, 
-  MoreHorizontal, 
-  FolderTree, 
-  History, 
-  Shield, 
-  Activity,
+  ArrowUp,
+  Building,
+  Copy,
+  Eye,
+  FolderTree,
   Plus,
   Search,
-  Filter,
-  Copy,
-  Building,
-  Users,
+  Shield,
   User,
-} from 'lucide-react';
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { requireAuth } from "@/lib/auth-guard";
-import { CarePlanRepository } from '../components/care-plan-repository';
-import { CarePlanVersionControl } from '../components/care-plan-version-control';
-import { CarePlanPermissions } from '../components/care-plan-permissions';
-import { CarePlanAuditTrail } from '../components/care-plan-audit-trail';
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
-// Placeholder data for demonstration
-const blueprintPlans = [
-  {
-    id: '1',
-    name: "Total Knee Arthroplasty (Preoperative)",
-    procedure: "Total Knee Arthroplasty (TKA)",
-    phase: "Preoperative",
-    owner: "Sophia",
-    lastUpdated: "06/10/2024",
-    status: 'active' as const,
-  },
-  {
-    id: '2',
-    name: "Coronary Artery Bypass Graft (Postoperative)",
-    procedure: "Coronary Artery Bypass Graft (CABG)",
-    phase: "Postoperative",
-    owner: "Sophia",
-    lastUpdated: "06/08/2024",
-    status: 'active' as const,
-  },
-  {
-    id: '3',
-    name: "Laparoscopic Cholecystectomy (Preoperative)",
-    procedure: "Laparoscopic Cholecystectomy",
-    phase: "Preoperative",
-    owner: "Sophia",
-    lastUpdated: "05/28/2024",
-    status: 'draft' as const,
-  },
-];
+// Care Plan Card Component
+function CarePlanCard({
+  plan,
+  onView,
+  onClone,
+  onPromote,
+}: {
+  plan: any;
+  onView: (plan: any) => void;
+  onClone: (plan: any) => void;
+  onPromote?: (plan: any) => void;
+}) {
+  // Extract content information
+  const content = plan.content || {};
+  const phases = content.phases || [];
+  const modifications =
+    content.organizationModifications ||
+    content.teamModifications ||
+    content.personalModifications;
 
-const organizationPlans = [
-  {
-    id: '4',
-    name: "Total Knee Arthroplasty (Preoperative)",
-    procedure: "Total Knee Arthroplasty (TKA)",
-    phase: "Preoperative",
-    owner: "Midwest Health",
-    lastUpdated: "06/11/2024",
-    status: 'active' as const,
-  },
-  {
-    id: '5',
-    name: "Coronary Artery Bypass Graft (Postoperative)",
-    procedure: "Coronary Artery Bypass Graft (CABG)",
-    phase: "Postoperative",
-    owner: "Midwest Health",
-    lastUpdated: "06/09/2024",
-    status: 'active' as const,
-  },
-  {
-    id: '6',
-    name: "Laparoscopic Cholecystectomy (Preoperative)",
-    procedure: "Laparoscopic Cholecystectomy",
-    phase: "Preoperative",
-    owner: "Midwest Health",
-    lastUpdated: "05/30/2024",
-    status: 'draft' as const,
-  },
-];
-
-// Clone Plan Dialog Component
-interface ClonePlanDialogProps {
-  plan: typeof blueprintPlans[0] | null;
-  open: boolean;
-  onClose: () => void;
-  onClone: (planData: any) => void;
-}
-
-function ClonePlanDialog({ plan, open, onClose, onClone }: ClonePlanDialogProps) {
-  const [cloneData, setCloneData] = useState({
-    name: '',
-    destinationType: 'personal',
-  });
-
-  // Update form when plan changes
-  React.useEffect(() => {
-    if (plan) {
-      setCloneData({
-        name: `${plan.name} (Copy)`,
-        destinationType: 'personal',
-      });
-    }
-  }, [plan]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (plan) {
-      onClone({
-        ...plan,
-        id: `clone-${Date.now()}`,
-        name: cloneData.name,
-        destinationType: cloneData.destinationType,
-        owner: cloneData.destinationType === 'organization' ? 'Midwest Health' : 
-               cloneData.destinationType === 'team' ? 'Care Team' : 'Personal',
-        lastUpdated: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
-        status: 'draft' as const,
-      });
-      onClose();
-    }
+  // Show derivation info
+  const getDerivationInfo = () => {
+    if (plan.planLevel === "system") return "Sophia System Template";
+    if (plan.planLevel === "organization") return "Derived from Sophia Plan";
+    if (plan.planLevel === "team") return "Derived from Organization Plan";
+    if (plan.planLevel === "personal") return "Derived from Team Plan";
+    return "";
   };
 
-  if (!plan) return null;
-
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Copy size={20} />
-            <span>Clone Care Plan</span>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <h4 className="font-medium text-sm text-gray-700">Original Plan</h4>
-            <p className="text-sm">{plan.name}</p>
-            <p className="text-xs text-gray-500">{plan.procedure} • {plan.phase}</p>
-          </div>
-
-          <div>
-            <Label htmlFor="planName">New Plan Name</Label>
-            <Input
-              id="planName"
-              value={cloneData.name}
-              onChange={(e) => setCloneData({ ...cloneData, name: e.target.value })}
-              placeholder="Enter plan name"
-              required
-            />
-          </div>
-          
-          <div>
-            <Label>Save to</Label>
-            <RadioGroup 
-              value={cloneData.destinationType} 
-              onValueChange={(value) => setCloneData({ ...cloneData, destinationType: value })}
-              className="mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="personal" id="personal" />
-                <Label htmlFor="personal" className="flex items-center space-x-2 cursor-pointer">
-                  <User size={16} />
-                  <span>My Plans (Personal)</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="team" id="team" />
-                <Label htmlFor="team" className="flex items-center space-x-2 cursor-pointer">
-                  <Users size={16} />
-                  <span>Team Plans</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="organization" id="organization" />
-                <Label htmlFor="organization" className="flex items-center space-x-2 cursor-pointer">
-                  <Building size={16} />
-                  <span>Organization Plans</span>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              Clone Plan
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-
-
-function CarePlanTable({ title, plans, onClonePlan, onViewPlan }: { title: string; plans: typeof blueprintPlans; onClonePlan: (plan: typeof blueprintPlans[0]) => void; onViewPlan: (plan: typeof blueprintPlans[0]) => void }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-            >
-              <div className="flex-1">
-                <div className="flex items-center space-x-3">
-                  <h3 className="font-semibold">{plan.name}</h3>
-                  <Badge
-                    variant={plan.status === 'active' ? 'default' : 'secondary'}
-                  >
-                    {plan.status}
-                  </Badge>
-                </div>
-                <div className="mt-1 text-sm text-gray-600">
-                  <span>{plan.procedure}</span> • <span>{plan.phase}</span> •{' '}
-                  <span>Owner: {plan.owner}</span> •{' '}
-                  <span>Updated: {plan.lastUpdated}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" title="View Plan" onClick={() => onViewPlan(plan)}>
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  title="Clone Plan"
-                  onClick={() => onClonePlan(plan)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" title="More Options">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
+    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-2">
+              <h3 className="font-semibold text-lg">{plan.title}</h3>
+              <Badge
+                variant={plan.status === "active" ? "default" : "secondary"}
+              >
+                {plan.status}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {plan.planLevel}
+              </Badge>
             </div>
-          ))}
-        </div>
-        <div className="mt-4 text-center">
-          <Button variant="outline">View All Plans</Button>
+            <p className="text-sm text-gray-600 mb-2">{plan.description}</p>
+
+            {/* Content Preview */}
+            <div className="mb-3 p-3 bg-gray-50 rounded-md">
+              <div className="text-sm font-medium text-gray-700 mb-1">
+                Content Preview:
+              </div>
+              {phases.length > 0 && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Phases:</strong> {phases.length} phase
+                  {phases.length !== 1 ? "s" : ""}
+                </div>
+              )}
+              {content.targetBP && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Target BP:</strong> {content.targetBP}
+                </div>
+              )}
+              {content.targetHbA1c && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Target HbA1c:</strong> {content.targetHbA1c}
+                </div>
+              )}
+              {modifications && (
+                <div className="text-xs text-gray-600">
+                  <strong>Modifications:</strong>{" "}
+                  {modifications.modifications?.length || 0} change
+                  {modifications.modifications?.length !== 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
+
+            {/* Derivation Info */}
+            <div className="text-xs text-blue-600 mb-2">
+              {getDerivationInfo()}
+            </div>
+
+            <div className="flex items-center space-x-4 text-xs text-gray-500">
+              <span>
+                Created: {new Date(plan.createdAt).toLocaleDateString()}
+              </span>
+              <span>
+                Updated: {new Date(plan.updatedAt).toLocaleDateString()}
+              </span>
+              <span>Version: {plan.versionNumber}</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="View Plan"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(plan);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Clone Plan"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClone(plan);
+              }}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            {/* Promotion button - only for personal plans */}
+            {plan.planLevel === "personal" && onPromote && (
+              <Button
+                variant="ghost"
+                size="sm"
+                title="Promote to Team Plan"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPromote(plan);
+                }}
+                className="text-green-600 hover:text-green-700"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-// Quick Stats Component
-function QuickStats() {
-  const stats = [
-    { label: 'Total Plans', value: '247', icon: FolderTree, color: 'text-blue-600' },
-    { label: 'Active Plans', value: '189', icon: Eye, color: 'text-green-600' },
-    { label: 'Draft Plans', value: '34', icon: Edit, color: 'text-yellow-600' },
-    { label: 'Recent Updates', value: '12', icon: History, color: 'text-purple-600' },
-  ];
+// Care Plan List Component
+function CarePlanList({
+  title,
+  description,
+  icon: Icon,
+  plans,
+  onView,
+  onClone,
+  onPromote,
+  onCreateNew,
+}: {
+  title: string;
+  description: string;
+  icon: any;
+  plans: any[];
+  onView: (plan: any) => void;
+  onClone: (plan: any) => void;
+  onPromote?: (plan: any) => void;
+  onCreateNew?: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPlans = plans.filter(
+    (plan) =>
+      plan.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      plan.description.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {stats.map((stat) => {
-        const IconComponent = stat.icon;
-        return (
-          <Card key={stat.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                </div>
-                <IconComponent size={24} className={stat.color} />
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Icon className="h-8 w-8 text-blue-600" />
+          <div>
+            <h2 className="text-2xl font-bold">{title}</h2>
+            <p className="text-gray-600">{description}</p>
+          </div>
+        </div>
+        {onCreateNew && (
+          <Button onClick={onCreateNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create New Plan
+          </Button>
+        )}
+      </div>
+
+      {/* Search */}
+      <div className="flex items-center space-x-2">
+        <Search className="h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Search plans..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
+      {/* Plans Grid */}
+      {filteredPlans.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <FolderTree className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No plans found
+            </h3>
+            <p className="text-gray-600">
+              {searchQuery
+                ? "Try adjusting your search terms."
+                : "No plans available at this level."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPlans.map((plan) => (
+            <div key={plan.id} onClick={() => onView(plan)}>
+              <CarePlanCard
+                plan={plan}
+                onView={onView}
+                onClone={onClone}
+                onPromote={onPromote}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Plan Count */}
+      <div className="text-sm text-gray-500">
+        {filteredPlans.length} plan{filteredPlans.length !== 1 ? "s" : ""} found
+      </div>
     </div>
   );
 }
 
 function CarePlansPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<typeof blueprintPlans[0] | null>(null);
-  const [clonedPlans, setClonedPlans] = useState<typeof blueprintPlans>([]);
-  
-  const sophiaPlans = blueprintPlans;
-  const midwestPlans = organizationPlans;
+  const location = useLocation();
+  const [planLevel, setPlanLevel] = useState("sophia");
 
-  const handleClonePlan = (plan: typeof blueprintPlans[0]) => {
-    setSelectedPlan(plan);
-    setCloneDialogOpen(true);
+  // Read the level from URL search params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const level = urlParams.get("level");
+    if (level && ["sophia", "organization", "team", "my"].includes(level)) {
+      setPlanLevel(level);
+    }
+  }, [location.search]);
+
+  // Fetch care plans data for different levels
+  const { data: sophiaPlansData } = trpc.carePlan.sophiaPlans.useQuery({
+    limit: 50,
+    offset: 0,
+  });
+
+  const { data: organizationPlansData } =
+    trpc.carePlan.organizationPlans.useQuery({
+      limit: 50,
+      offset: 0,
+    });
+
+  const { data: myPlansData } = trpc.carePlan.myPlans.useQuery({
+    limit: 50,
+    offset: 0,
+  });
+
+  const { data: teamPlansData } = trpc.carePlan.teamPlans.useQuery({
+    limit: 50,
+    offset: 0,
+  });
+
+  const sophiaPlans = sophiaPlansData?.plans || [];
+  const organizationPlans = organizationPlansData?.plans || [];
+  const teamPlans = teamPlansData?.plans || [];
+  const myPlans = myPlansData?.plans || [];
+
+  // Get the current plan level data
+  const getCurrentPlans = () => {
+    switch (planLevel) {
+      case "sophia":
+        return sophiaPlans;
+      case "organization":
+        return organizationPlans;
+      case "team":
+        return teamPlans;
+      case "my":
+        return myPlans;
+      default:
+        return sophiaPlans;
+    }
   };
 
-  const handleCloneSubmit = (clonedPlan: any) => {
-    setClonedPlans(prev => [...prev, clonedPlan]);
-    // Here you would typically make an API call to save the cloned plan
-    console.log('Plan cloned:', clonedPlan);
+  const getCurrentPlanInfo = () => {
+    switch (planLevel) {
+      case "sophia":
+        return {
+          title: "Sophia Plans",
+          description: "System default plans available to all users",
+          icon: Shield,
+        };
+      case "organization":
+        return {
+          title: "Organization Plans",
+          description: "Plans specific to your organization",
+          icon: Building,
+        };
+      case "team":
+        return {
+          title: "Team Plans",
+          description: "Plans specific to your team",
+          icon: Users,
+        };
+      case "my":
+        return {
+          title: "My Plans",
+          description: "Plans you've created or been assigned",
+          icon: User,
+        };
+      default:
+        return {
+          title: "Sophia Plans",
+          description: "System default plans available to all users",
+          icon: Shield,
+        };
+    }
   };
 
-  const handleCloseDialog = () => {
-    setCloneDialogOpen(false);
-    setSelectedPlan(null);
-  };
-
-  const handleViewPlan = (plan: typeof blueprintPlans[0]) => {
+  const handleViewPlan = (plan: any) => {
     // Convert plan to CarePlanTemplate format and pass as search param
     const planTemplate = {
       id: plan.id,
-      name: plan.name,
-      description: `${plan.procedure} care plan`,
-      category: plan.procedure.toLowerCase().replace(/\s+/g, '-'),
-      priority: 'medium' as const,
+      name: plan.title,
+      description: plan.description,
+      category: plan.category || "general",
+      priority: "medium" as const,
       estimatedDuration: 60,
       components: [],
       tasks: [],
       globalRequirements: [],
       validationRules: [],
       metadata: {
-        createdBy: plan.owner,
-        createdAt: new Date().toISOString(),
-        lastModified: plan.lastUpdated,
-        version: '1.0.0',
-        tags: [plan.procedure, plan.phase],
-        isTemplate: true
-      }
+        createdBy: plan.createdBy,
+        createdAt: plan.createdAt,
+        lastModified: plan.updatedAt,
+        version: plan.versionNumber?.toString() || "1.0.0",
+        tags: plan.tags || [],
+        isTemplate: plan.isTemplate || false,
+      },
     };
-    
-    navigate({ 
-      to: '/surgical-plan-view',
-      search: { planData: JSON.stringify(planTemplate) }
+
+    navigate({
+      to: "/surgical-plan-view",
+      search: { planData: JSON.stringify(planTemplate) },
     });
+  };
+
+  const handleClonePlan = (plan: any) => {
+    // TODO: Implement plan cloning functionality
+    console.log("Clone plan:", plan);
+  };
+
+  const handlePromotePlan = (plan: any) => {
+    // TODO: Implement plan promotion from personal to team level
+    console.log("Promote plan to team level:", plan);
+  };
+
+  const handleCreateNew = () => {
+    // TODO: Implement create new plan functionality
+    console.log("Create new plan");
   };
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">
-      {/* Header */}
+      {/* Main Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Care Plan Repository</h1>
+          <h1 className="text-3xl font-bold">Care Plans</h1>
           <p className="text-gray-600 mt-1">
-            Comprehensive care plan management with version control, permissions, and audit trails
+            Manage and access care plans at different levels
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <Search size={16} className="mr-2" />
-            Search
-          </Button>
-          <Button variant="outline">
-            <Filter size={16} className="mr-2" />
-            Filter
-          </Button>
-          <Button>
-            <Plus size={16} className="mr-2" />
-            Create New Plan
-          </Button>
-        </div>
       </div>
 
-      {/* Quick Stats */}
-      <QuickStats />
-
-      {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview" className="flex items-center space-x-2">
-            <FolderTree size={16} />
-            <span>Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="repository" className="flex items-center space-x-2">
-            <FolderTree size={16} />
-            <span>Repository</span>
-          </TabsTrigger>
-          <TabsTrigger value="versions" className="flex items-center space-x-2">
-            <History size={16} />
-            <span>Versions</span>
-          </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center space-x-2">
-            <Shield size={16} />
-            <span>Permissions</span>
-          </TabsTrigger>
-          <TabsTrigger value="audit" className="flex items-center space-x-2">
-            <Activity size={16} />
-            <span>Audit Trail</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <CarePlanTable title="Sophia Blueprints" plans={sophiaPlans} onClonePlan={handleClonePlan} onViewPlan={handleViewPlan} />
-            <CarePlanTable title="Midwest Health Plans" plans={midwestPlans} onClonePlan={handleClonePlan} onViewPlan={handleViewPlan} />
-          </div>
-          
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Activity size={20} />
-                <span>Recent Activity</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  {
-                    action: 'Updated',
-                    plan: 'Total Knee Arthroplasty Protocol',
-                    user: 'Dr. Johnson',
-                    time: '2 hours ago',
-                    type: 'update',
-                  },
-                  {
-                    action: 'Created',
-                    plan: 'Cardiac Rehabilitation v2.0',
-                    user: 'Dr. Smith',
-                    time: '4 hours ago',
-                    type: 'create',
-                  },
-                  {
-                    action: 'Reviewed',
-                    plan: 'Diabetes Management Protocol',
-                    user: 'Dr. Davis',
-                    time: '6 hours ago',
-                    type: 'view',
-                  },
-                ].map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        activity.type === 'create' ? 'bg-green-500' :
-                        activity.type === 'update' ? 'bg-blue-500' : 'bg-gray-500'
-                      }`} />
-                      <div>
-                        <span className="font-medium">{activity.action}</span>
-                        <span className="text-gray-600 ml-1">{activity.plan}</span>
-                        <div className="text-sm text-gray-500">
-                          by {activity.user} • {activity.time}
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Eye size={14} />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="repository">
-          <CarePlanRepository />
-        </TabsContent>
-
-        <TabsContent value="versions">
-          <CarePlanVersionControl carePlanId="1" />
-        </TabsContent>
-
-        <TabsContent value="permissions">
-          <CarePlanPermissions />
-        </TabsContent>
-
-        <TabsContent value="audit">
-          <CarePlanAuditTrail />
-        </TabsContent>
-      </Tabs>
-        
-        <ClonePlanDialog
-          open={cloneDialogOpen}
-          plan={selectedPlan}
-          onClone={handleCloneSubmit}
-          onClose={handleCloseDialog}
-        />
-      </div>
-    );
-  }
+      {/* Single Plan Level View */}
+      <CarePlanList
+        title={getCurrentPlanInfo().title}
+        description={getCurrentPlanInfo().description}
+        icon={getCurrentPlanInfo().icon}
+        plans={getCurrentPlans()}
+        onView={handleViewPlan}
+        onClone={handleClonePlan}
+        onPromote={planLevel === "my" ? handlePromotePlan : undefined}
+        onCreateNew={planLevel !== "sophia" ? handleCreateNew : undefined}
+      />
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/care-plans")({
   beforeLoad: requireAuth,

@@ -1,13 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
 
-  "name": "example",
+  "name": "sophia-v2",
   "main": "./dist/index.js",
 
-  "assets": {
-    "directory": "../../apps/web/dist",
-    "binding": "ASSETS"
-  },
+  // "assets": {
+  //   "directory": "../../apps/web/dist",
+  //   "binding": "ASSETS"
+  // },
 
   "upload_source_maps": true,
 
@@ -39,25 +39,30 @@
     "production": {
       "routes": [
         {
-          "pattern": "example.com",
+          "pattern": "api.jyoung2k.org",
           "custom_domain": true
         }
       ],
       "vars": {
         "ENVIRONMENT": "production",
-        "ALLOWED_ORIGINS": "https://example.com"
+        "ALLOWED_ORIGINS": "https://jyoung2k.org"
       },
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
-          "id": "your-production-hyperdrive-cached-id-here"
+          "id": "c6c65bace6714d65a974d0304fdcae90"
         },
         {
           "binding": "HYPERDRIVE_DIRECT",
-          "id": "your-production-hyperdrive-direct-id-here"
+          "id": "7f836a9c13d04fe3a0d5df20c5dcdc17"
         }
       ],
-      "kv_namespaces": []
+      "kv_namespaces": [
+        {
+          "binding": "CACHE",
+          "id": "6f09e368d0b3446593a29f56488b0860"
+        }
+      ]
     },
     "staging": {
       "routes": [

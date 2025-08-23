@@ -8,31 +8,41 @@
  * SPDX-License-Identifier: MIT
  */
 
+import { Db } from "@repo/db";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { Hono } from "hono";
 import type { AppContext } from "./lib/context.js";
 import { router } from "./lib/trpc.js";
-import { organizationRouter } from "./routers/organization.js";
-import { patientRouter } from "./routers/patient.js";
-import { userRouter } from "./routers/user.js";
 import { careExceptionRouter } from "./routers/care-exception.js";
 import { carePlanRouter } from "./routers/care-plan.js";
+import { organizationRouter } from "./routers/organization.js";
+import { patientRouter } from "./routers/patient.js";
 import { taskRouter } from "./routers/task.js";
+import { userRouter } from "./routers/user.js";
 
 // DEBUG flag for startup instrumentation
 const DEBUG_LOG = true;
 if (DEBUG_LOG) {
   try {
-    const cePre = Object.keys(((careExceptionRouter as any)?._def?.record) ?? {});
-    const ptPre = Object.keys(((patientRouter as any)?._def?.record) ?? {});
-    const orgPre = Object.keys(((organizationRouter as any)?._def?.record) ?? {});
-    const userPre = Object.keys(((userRouter as any)?._def?.record) ?? {});
-    console.log("[DEBUG] PRE appRouter compose - careExceptionRouter keys:", cePre);
+    const cePre = Object.keys((careExceptionRouter as any)?._def?.record ?? {});
+    const ptPre = Object.keys((patientRouter as any)?._def?.record ?? {});
+    const orgPre = Object.keys((organizationRouter as any)?._def?.record ?? {});
+    const userPre = Object.keys((userRouter as any)?._def?.record ?? {});
+    console.log(
+      "[DEBUG] PRE appRouter compose - careExceptionRouter keys:",
+      cePre,
+    );
     console.log("[DEBUG] PRE appRouter compose - patientRouter keys:", ptPre);
-    console.log("[DEBUG] PRE appRouter compose - organizationRouter keys:", orgPre);
+    console.log(
+      "[DEBUG] PRE appRouter compose - organizationRouter keys:",
+      orgPre,
+    );
     console.log("[DEBUG] PRE appRouter compose - userRouter keys:", userPre);
   } catch (e) {
-    console.log("[DEBUG] PRE appRouter compose: error while reading child keys", e);
+    console.log(
+      "[DEBUG] PRE appRouter compose: error while reading child keys",
+      e,
+    );
   }
 }
 
@@ -57,15 +67,29 @@ if (DEBUG_LOG) {
 
     const readChildKeys = (label: string, node: any) => {
       const hasRecord = !!node?._def && !!(node as any)?._def?.record;
-      const keys = hasRecord ? Object.keys((node as any)?._def?.record ?? {}) : [];
-      console.log(`[DEBUG] POST compose - ${label} hasRecord=${hasRecord} keys=`, keys);
+      const keys = hasRecord
+        ? Object.keys((node as any)?._def?.record ?? {})
+        : [];
+      console.log(
+        `[DEBUG] POST compose - ${label} hasRecord=${hasRecord} keys=`,
+        keys,
+      );
     };
 
     readChildKeys("patient", (appRouter as any)?._def?.record?.patient);
-    readChildKeys("organization", (appRouter as any)?._def?.record?.organization);
+    readChildKeys(
+      "organization",
+      (appRouter as any)?._def?.record?.organization,
+    );
     readChildKeys("user", (appRouter as any)?._def?.record?.user);
-    readChildKeys("careException", (appRouter as any)?._def?.record?.careException);
-    readChildKeys("careExceptions (alias)", (appRouter as any)?._def?.record?.careExceptions);
+    readChildKeys(
+      "careException",
+      (appRouter as any)?._def?.record?.careException,
+    );
+    readChildKeys(
+      "careExceptions (alias)",
+      (appRouter as any)?._def?.record?.careExceptions,
+    );
 
     // Optional: enumerate full procedure paths
     const collectPaths = (node: any, prefix = ""): string[] => {
@@ -112,8 +136,79 @@ app.get("/", (c) => {
 });
 
 // Health check endpoint
-app.get("/health", (c) => {
-  return c.json({ status: "healthy", timestamp: new Date().toISOString() });
+app.get("/health", async (c) => {
+  try {
+    const db = c.get("db");
+    if (!db) {
+      return c.json({
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        carePlans: "Database not available",
+      });
+    }
+
+    const plans = await db
+      .select({
+        id: Db.carePlan.id,
+        title: Db.carePlan.title,
+        status: Db.carePlan.status,
+      })
+      .from(Db.carePlan)
+      .limit(5);
+
+    return c.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      carePlans: {
+        count: plans.length,
+        plans: plans,
+      },
+    });
+  } catch (error) {
+    console.error("Error in health check:", error);
+    return c.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      carePlans: "Error fetching care plans",
+    });
+  }
+});
+
+// Test endpoint to check care plans without authentication
+app.get("/test/care-plans", async (c) => {
+  try {
+    const db = c.get("db");
+    if (!db) {
+      return c.json({ error: "Database not available" }, 503);
+    }
+
+    const plans = await db
+      .select({
+        id: Db.carePlan.id,
+        title: Db.carePlan.title,
+        description: Db.carePlan.description,
+        status: Db.carePlan.status,
+        createdAt: Db.carePlan.createdAt,
+        updatedAt: Db.carePlan.updatedAt,
+      })
+      .from(Db.carePlan)
+      .limit(10);
+
+    return c.json({
+      success: true,
+      count: plans.length,
+      plans: plans,
+    });
+  } catch (error) {
+    console.error("Error fetching care plans:", error);
+    return c.json(
+      {
+        error: "Failed to fetch care plans",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
 });
 
 /*

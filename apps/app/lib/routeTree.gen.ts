@@ -22,10 +22,13 @@ import { Route as AccountRouteImport } from './../routes/account'
 import { Route as AboutRouteImport } from './../routes/about'
 import { Route as IndexRouteImport } from './../routes/index'
 import { Route as TaskManagementIndexRouteImport } from './../routes/task-management.index'
+import { Route as TaskManagementCreateStep2RouteImport } from './../routes/task-management/create-step2'
+import { Route as TaskManagementCreateRouteImport } from './../routes/task-management/create'
 import { Route as TaskManagementTaskIdRouteImport } from './../routes/task-management.$taskId'
 import { Route as PrdsSurgicalPlanRouteImport } from './../routes/prds.surgical-plan'
 import { Route as PrdsSophiaPatientEngagementRouteImport } from './../routes/prds.sophia-patient-engagement'
 import { Route as PrdsGenesisAgentRouteImport } from './../routes/prds.genesis-agent'
+import { Route as CareExceptionsIdRouteImport } from './../routes/care-exceptions/$id'
 import { Route as AgentsQuantumAgentRouteImport } from './../routes/agents.quantum-agent'
 import { Route as AgentsPatientEngagementRouteImport } from './../routes/agents.patient-engagement'
 import { Route as AgentsGenesisAgentRouteImport } from './../routes/agents.genesis-agent'
@@ -96,6 +99,17 @@ const TaskManagementIndexRoute = TaskManagementIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TaskManagementRoute,
 } as any)
+const TaskManagementCreateStep2Route =
+  TaskManagementCreateStep2RouteImport.update({
+    id: '/create-step2',
+    path: '/create-step2',
+    getParentRoute: () => TaskManagementRoute,
+  } as any)
+const TaskManagementCreateRoute = TaskManagementCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => TaskManagementRoute,
+} as any)
 const TaskManagementTaskIdRoute = TaskManagementTaskIdRouteImport.update({
   id: '/$taskId',
   path: '/$taskId',
@@ -116,6 +130,11 @@ const PrdsGenesisAgentRoute = PrdsGenesisAgentRouteImport.update({
   id: '/prds/genesis-agent',
   path: '/prds/genesis-agent',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CareExceptionsIdRoute = CareExceptionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CareExceptionsRoute,
 } as any)
 const AgentsQuantumAgentRoute = AgentsQuantumAgentRouteImport.update({
   id: '/agents/quantum-agent',
@@ -142,7 +161,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
-  '/care-exceptions': typeof CareExceptionsRoute
+  '/care-exceptions': typeof CareExceptionsRouteWithChildren
   '/care-plans': typeof CarePlansRoute
   '/login': typeof LoginRoute
   '/my-plans': typeof MyPlansRoute
@@ -155,17 +174,20 @@ export interface FileRoutesByFullPath {
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
+  '/care-exceptions/$id': typeof CareExceptionsIdRoute
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
   '/task-management/$taskId': typeof TaskManagementTaskIdRoute
+  '/task-management/create': typeof TaskManagementCreateRoute
+  '/task-management/create-step2': typeof TaskManagementCreateStep2Route
   '/task-management/': typeof TaskManagementIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
-  '/care-exceptions': typeof CareExceptionsRoute
+  '/care-exceptions': typeof CareExceptionsRouteWithChildren
   '/care-plans': typeof CarePlansRoute
   '/login': typeof LoginRoute
   '/my-plans': typeof MyPlansRoute
@@ -177,10 +199,13 @@ export interface FileRoutesByTo {
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
+  '/care-exceptions/$id': typeof CareExceptionsIdRoute
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
   '/task-management/$taskId': typeof TaskManagementTaskIdRoute
+  '/task-management/create': typeof TaskManagementCreateRoute
+  '/task-management/create-step2': typeof TaskManagementCreateStep2Route
   '/task-management': typeof TaskManagementIndexRoute
 }
 export interface FileRoutesById {
@@ -188,7 +213,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
-  '/care-exceptions': typeof CareExceptionsRoute
+  '/care-exceptions': typeof CareExceptionsRouteWithChildren
   '/care-plans': typeof CarePlansRoute
   '/login': typeof LoginRoute
   '/my-plans': typeof MyPlansRoute
@@ -201,10 +226,13 @@ export interface FileRoutesById {
   '/agents/genesis-agent': typeof AgentsGenesisAgentRoute
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
+  '/care-exceptions/$id': typeof CareExceptionsIdRoute
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
   '/task-management/$taskId': typeof TaskManagementTaskIdRoute
+  '/task-management/create': typeof TaskManagementCreateRoute
+  '/task-management/create-step2': typeof TaskManagementCreateStep2Route
   '/task-management/': typeof TaskManagementIndexRoute
 }
 export interface FileRouteTypes {
@@ -226,10 +254,13 @@ export interface FileRouteTypes {
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
+    | '/care-exceptions/$id'
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
     | '/task-management/$taskId'
+    | '/task-management/create'
+    | '/task-management/create-step2'
     | '/task-management/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -248,10 +279,13 @@ export interface FileRouteTypes {
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
+    | '/care-exceptions/$id'
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
     | '/task-management/$taskId'
+    | '/task-management/create'
+    | '/task-management/create-step2'
     | '/task-management'
   id:
     | '__root__'
@@ -271,10 +305,13 @@ export interface FileRouteTypes {
     | '/agents/genesis-agent'
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
+    | '/care-exceptions/$id'
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
     | '/task-management/$taskId'
+    | '/task-management/create'
+    | '/task-management/create-step2'
     | '/task-management/'
   fileRoutesById: FileRoutesById
 }
@@ -282,7 +319,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
-  CareExceptionsRoute: typeof CareExceptionsRoute
+  CareExceptionsRoute: typeof CareExceptionsRouteWithChildren
   CarePlansRoute: typeof CarePlansRoute
   LoginRoute: typeof LoginRoute
   MyPlansRoute: typeof MyPlansRoute
@@ -393,6 +430,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TaskManagementIndexRouteImport
       parentRoute: typeof TaskManagementRoute
     }
+    '/task-management/create-step2': {
+      id: '/task-management/create-step2'
+      path: '/create-step2'
+      fullPath: '/task-management/create-step2'
+      preLoaderRoute: typeof TaskManagementCreateStep2RouteImport
+      parentRoute: typeof TaskManagementRoute
+    }
+    '/task-management/create': {
+      id: '/task-management/create'
+      path: '/create'
+      fullPath: '/task-management/create'
+      preLoaderRoute: typeof TaskManagementCreateRouteImport
+      parentRoute: typeof TaskManagementRoute
+    }
     '/task-management/$taskId': {
       id: '/task-management/$taskId'
       path: '/$taskId'
@@ -420,6 +471,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prds/genesis-agent'
       preLoaderRoute: typeof PrdsGenesisAgentRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/care-exceptions/$id': {
+      id: '/care-exceptions/$id'
+      path: '/$id'
+      fullPath: '/care-exceptions/$id'
+      preLoaderRoute: typeof CareExceptionsIdRouteImport
+      parentRoute: typeof CareExceptionsRoute
     }
     '/agents/quantum-agent': {
       id: '/agents/quantum-agent'
@@ -452,13 +510,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CareExceptionsRouteChildren {
+  CareExceptionsIdRoute: typeof CareExceptionsIdRoute
+}
+
+const CareExceptionsRouteChildren: CareExceptionsRouteChildren = {
+  CareExceptionsIdRoute: CareExceptionsIdRoute,
+}
+
+const CareExceptionsRouteWithChildren = CareExceptionsRoute._addFileChildren(
+  CareExceptionsRouteChildren,
+)
+
 interface TaskManagementRouteChildren {
   TaskManagementTaskIdRoute: typeof TaskManagementTaskIdRoute
+  TaskManagementCreateRoute: typeof TaskManagementCreateRoute
+  TaskManagementCreateStep2Route: typeof TaskManagementCreateStep2Route
   TaskManagementIndexRoute: typeof TaskManagementIndexRoute
 }
 
 const TaskManagementRouteChildren: TaskManagementRouteChildren = {
   TaskManagementTaskIdRoute: TaskManagementTaskIdRoute,
+  TaskManagementCreateRoute: TaskManagementCreateRoute,
+  TaskManagementCreateStep2Route: TaskManagementCreateStep2Route,
   TaskManagementIndexRoute: TaskManagementIndexRoute,
 }
 
@@ -470,7 +544,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
-  CareExceptionsRoute: CareExceptionsRoute,
+  CareExceptionsRoute: CareExceptionsRouteWithChildren,
   CarePlansRoute: CarePlansRoute,
   LoginRoute: LoginRoute,
   MyPlansRoute: MyPlansRoute,

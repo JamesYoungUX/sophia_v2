@@ -1,13 +1,6 @@
-"use client"
+"use client";
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from "lucide-react"
+import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
 
 import {
   Avatar,
@@ -24,25 +17,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@repo/ui"
+} from "@repo/ui";
 
-import { auth } from "@/lib/auth"
-import { useNavigate } from "@tanstack/react-router"
+import { auth } from "@/lib/auth";
+import { useNavigate } from "@tanstack/react-router";
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
-  const navigate = useNavigate()
+  const { isMobile } = useSidebar();
+  const navigate = useNavigate();
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -85,40 +78,29 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => navigate({ to: "/account" })}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={async () => {
-              try {
-                console.log("[LOGOUT] Starting logout process...");
-                await auth.signOut();
-                console.log("[LOGOUT] Logout successful, redirecting to login...");
-                // Force navigation to login after logout
-                window.location.href = "/login";
-              } catch (error) {
-                console.error("[LOGOUT] Logout failed:", error);
-                // Still redirect to login even if logout fails
-                window.location.href = "/login";
-              }
-            }}>
+            <DropdownMenuItem
+              onClick={async () => {
+                try {
+                  console.log("[LOGOUT] Starting logout process...");
+                  await auth.signOut();
+                  console.log(
+                    "[LOGOUT] Logout successful, redirecting to login...",
+                  );
+                  // Force navigation to login after logout
+                  window.location.href = "/login";
+                } catch (error) {
+                  console.error("[LOGOUT] Logout failed:", error);
+                  // Still redirect to login even if logout fails
+                  window.location.href = "/login";
+                }
+              }}
+            >
               <LogOut />
               Log out
             </DropdownMenuItem>
@@ -126,5 +108,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

@@ -1,13 +1,24 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { requireAuth } from "@/lib/auth-guard";
 import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth-guard";
 import { api } from "@/lib/trpc";
-import * as React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
-import { Badge } from "@repo/ui";
-import { Toggle } from "@repo/ui";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@repo/ui";
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Toggle,
+} from "@repo/ui";
+import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, Clock, User } from "lucide-react";
+import * as React from "react";
 
 export const Route = createFileRoute("/care-exceptions")({
   beforeLoad: requireAuth,
@@ -83,13 +94,14 @@ function InterventionsPage() {
   const [escalatedOnly, setEscalatedOnly] = React.useState<boolean>(false);
 
   // Fetch live care exceptions via tRPC with optional escalatedOnly filter
-  const { data, isLoading, isError, error, isFetching } = api.careException.list.useQuery(
-    { escalatedOnly },
-    {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    }
-  );
+  const { data, isLoading, isError, error, isFetching } =
+    api.careException.list.useQuery(
+      { escalatedOnly },
+      {
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+    );
 
   // Log success data and verify humanized timestamps on small sample when data changes
   React.useEffect(() => {
@@ -113,7 +125,7 @@ function InterventionsPage() {
           patientFirstName: item.patientFirstName,
           patientLastName: item.patientLastName,
           patientMrnId: item.patientMrnId,
-          allKeys: Object.keys(item)
+          allKeys: Object.keys(item),
         });
       }
     }
@@ -122,10 +134,66 @@ function InterventionsPage() {
   // Log query error state changes
   React.useEffect(() => {
     if (!DEBUG_LOG || !isError) return;
-    console.error("[CareExceptions] query error", { escalatedOnly, err: error });
+    console.error("[CareExceptions] query error", {
+      escalatedOnly,
+      err: error,
+    });
   }, [isError, error, escalatedOnly]);
 
-  const rows = data ?? [];
+  const rawRows = data ?? [];
+
+  // Sort rows: in_progress + open first (by severity), then oldest open (by severity)
+  const rows = React.useMemo(() => {
+    const sortedRows = [...rawRows];
+
+    // Define severity priority (high = 0, medium = 1, low = 2)
+    const getSeverityPriority = (severity: string) => {
+      switch (severity) {
+        case "high":
+          return 0;
+        case "medium":
+          return 1;
+        case "low":
+          return 2;
+        default:
+          return 3;
+      }
+    };
+
+    return sortedRows.sort((a: any, b: any) => {
+      // First: prioritize in_progress status
+      const aIsInProgress = a.status === "in_progress";
+      const bIsInProgress = b.status === "in_progress";
+
+      if (aIsInProgress && !bIsInProgress) return -1;
+      if (!aIsInProgress && bIsInProgress) return 1;
+
+      // Second: prioritize open status
+      const aIsOpen = a.status === "open";
+      const bIsOpen = b.status === "open";
+
+      if (aIsOpen && !bIsOpen) return -1;
+      if (!aIsOpen && bIsOpen) return 1;
+
+      // Third: sort by severity (high first)
+      const severityDiff =
+        getSeverityPriority(a.severity) - getSeverityPriority(b.severity);
+      if (severityDiff !== 0) return severityDiff;
+
+      // Fourth: for open cases, sort by oldest first (firstDetectedAt ascending)
+      if (aIsOpen && bIsOpen) {
+        const aDate = new Date(a.firstDetectedAt || a.createdAt || 0).getTime();
+        const bDate = new Date(b.firstDetectedAt || b.createdAt || 0).getTime();
+        return aDate - bDate; // oldest first
+      }
+
+      // Default: sort by creation date (newest first)
+      const aCreated = new Date(a.createdAt || 0).getTime();
+      const bCreated = new Date(b.createdAt || 0).getTime();
+      return bCreated - aCreated;
+    });
+  }, [rawRows]);
+
   if (DEBUG_LOG)
     console.log("[CareExceptions] render", {
       session: Boolean(session),
@@ -141,7 +209,10 @@ function InterventionsPage() {
     totalCases: rows.length,
     highPriority: rows.filter((c: any) => c.severity === "high").length,
     overdue: rows.filter(
-      (c: any) => c.firstDetectedAt && now - new Date(c.firstDetectedAt as any).getTime() > 3 * 24 * 60 * 60 * 1000
+      (c: any) =>
+        c.firstDetectedAt &&
+        now - new Date(c.firstDetectedAt as any).getTime() >
+          3 * 24 * 60 * 60 * 1000,
     ).length,
     inProgress: rows.filter((c: any) => c.status === "in_progress").length,
   };
@@ -151,7 +222,9 @@ function InterventionsPage() {
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Care Exceptions</h1>
-        <p className="text-muted-foreground">Address exceptional cases in patient surgical care with compassion</p>
+        <p className="text-muted-foreground">
+          Address exceptional cases in patient surgical care with compassion
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -163,7 +236,9 @@ function InterventionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalCases}</div>
-            <p className="text-xs text-muted-foreground">Active intervention cases</p>
+            <p className="text-xs text-muted-foreground">
+              Active intervention cases
+            </p>
           </CardContent>
         </Card>
 
@@ -173,8 +248,12 @@ function InterventionsPage() {
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.highPriority}</div>
-            <p className="text-xs text-muted-foreground">Require immediate attention</p>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.highPriority}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Require immediate attention
+            </p>
           </CardContent>
         </Card>
 
@@ -184,7 +263,9 @@ function InterventionsPage() {
             <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.overdue}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {stats.overdue}
+            </div>
             <p className="text-xs text-muted-foreground">Past due date</p>
           </CardContent>
         </Card>
@@ -195,8 +276,12 @@ function InterventionsPage() {
             <User className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-            <p className="text-xs text-muted-foreground">Currently being addressed</p>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.inProgress}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Currently being addressed
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -207,15 +292,20 @@ function InterventionsPage() {
           <div className="flex items-start sm:items-center justify-between gap-4">
             <div>
               <CardTitle>Active Care Exceptions</CardTitle>
-              <CardDescription>Live feed of care exceptions from the platform</CardDescription>
+              <CardDescription>
+                Live feed of care exceptions from the platform
+              </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Escalated only</span>
+              <span className="text-sm text-muted-foreground">
+                Escalated only
+              </span>
               <Toggle
                 aria-label="Toggle escalated only filter"
                 pressed={escalatedOnly}
                 onPressedChange={(v) => {
-                  if (DEBUG_LOG) console.log("[CareExceptions] toggle escalatedOnly", v);
+                  if (DEBUG_LOG)
+                    console.log("[CareExceptions] toggle escalatedOnly", v);
                   setEscalatedOnly(Boolean(v));
                 }}
                 variant="default"
@@ -248,25 +338,39 @@ function InterventionsPage() {
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7}>
-                    <div className="text-sm text-muted-foreground">Loading care exceptions...</div>
+                    <div className="text-sm text-muted-foreground">
+                      Loading care exceptions...
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7}>
-                    <div className="text-sm text-muted-foreground">No care exceptions found.</div>
+                    <div className="text-sm text-muted-foreground">
+                      No care exceptions found.
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 rows.map((item: any) => (
-                  <TableRow key={item.id}>
+                  <TableRow
+                    key={item.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      window.location.assign(`/care-exceptions/${item.id}`);
+                    }}
+                  >
                     <TableCell>
                       <div className="flex flex-col">
                         {/* Top line: Lastname, First name; fallback to patientId if both names missing */}
                         <span className="font-medium">
                           {(() => {
-                            const lastName = (item.patientLastName ?? "").trim();
-                            const firstName = (item.patientFirstName ?? "").trim();
+                            const lastName = (
+                              item.patientLastName ?? ""
+                            ).trim();
+                            const firstName = (
+                              item.patientFirstName ?? ""
+                            ).trim();
                             if (lastName || firstName) {
                               return `${lastName}${lastName && firstName ? ", " : ""}${firstName}`;
                             }
@@ -275,7 +379,8 @@ function InterventionsPage() {
                         </span>
                         {/* Second line: PID and MRN with fallback */}
                         <span className="text-xs text-muted-foreground">
-                          PID: {item.patientId} • MRN: {item.patientMrnId ?? "abc"}
+                          PID: {item.patientId} • MRN:{" "}
+                          {item.patientMrnId ?? "abc"}
                         </span>
                       </div>
                     </TableCell>
@@ -294,27 +399,42 @@ function InterventionsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-sm">{humanizeTime(item.firstDetectedAt)}</span>
+                        <span className="text-sm">
+                          {humanizeTime(item.firstDetectedAt)}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(
-                            (item.firstDetectedAt as any) ?? (item.createdAt as any) ?? (item.updatedAt as any) ?? Date.now()
+                            (item.firstDetectedAt as any) ??
+                              (item.createdAt as any) ??
+                              (item.updatedAt as any) ??
+                              Date.now(),
                           ).toLocaleDateString()}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="text-sm">{humanizeTime(item.lastDetectedAt)}</span>
+                        <span className="text-sm">
+                          {humanizeTime(item.lastDetectedAt)}
+                        </span>
                         <span className="text-xs text-muted-foreground">
-                          {item.lastDetectedAt ? new Date(item.lastDetectedAt as any).toLocaleDateString() : "—"}
+                          {item.lastDetectedAt
+                            ? new Date(
+                                item.lastDetectedAt as any,
+                              ).toLocaleDateString()
+                            : "—"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       {item.escalated ? (
                         <div className="flex flex-col gap-1">
-                          <Badge className="bg-red-100 text-red-800 border-red-200">Escalated</Badge>
-                          <span className="text-xs text-muted-foreground">{humanizeTime(item.escalatedAt)}</span>
+                          <Badge className="bg-red-100 text-red-800 border-red-200">
+                            Escalated
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {humanizeTime(item.escalatedAt)}
+                          </span>
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>

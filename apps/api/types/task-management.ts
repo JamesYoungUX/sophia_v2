@@ -1,17 +1,47 @@
 /**
  * TypeScript interfaces for Task Management System
- * 
+ *
  * These interfaces define the structure for task specifications,
  * validation results, and import operations.
  */
 
-export type TaskStatus = 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'deferred' | 'failed';
-export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
-export type TaskCategory = 'Medication' | 'Assessment' | 'Education' | 'Monitoring' | 'Procedure' | 'Documentation' | 'Communication' | 'Discharge' | 'Follow-up' | 'Other';
-export type TaskVersionStatus = 'draft' | 'active' | 'inactive';
-export type DependencyType = 'prerequisite' | 'concurrent' | 'sequential' | 'conditional';
-export type ImportStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'partial';
-export type AuditAction = 'created' | 'updated' | 'deleted' | 'activated' | 'deactivated' | 'validated' | 'assigned' | 'executed' | 'completed' | 'failed';
+export type TaskStatus =
+  | "pending"
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "deferred"
+  | "failed";
+export type TaskPriority = "low" | "medium" | "high" | "critical";
+export type TaskCategory =
+  | "Education"
+  | "Lifestyle/Health"
+  | "Logistics"
+  | "Medical";
+export type TaskVersionStatus = "draft" | "active" | "inactive";
+export type DependencyType =
+  | "prerequisite"
+  | "concurrent"
+  | "sequential"
+  | "conditional";
+export type ImportStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "partial";
+export type AuditAction =
+  | "created"
+  | "updated"
+  | "deleted"
+  | "activated"
+  | "deactivated"
+  | "validated"
+  | "assigned"
+  | "executed"
+  | "completed"
+  | "failed";
 
 export interface TaskTiming {
   offsetDays?: number;
@@ -39,16 +69,26 @@ export interface TaskSpecification {
   taskId: string; // Business ID from JSON
   name: string;
   category: TaskCategory;
-  instructionPatient: string;
-  instructionClinician: string;
-  timing?: TaskTiming;
-  conditions?: TaskConditions;
-  evidence?: TaskEvidence;
   status: TaskStatus;
   priority: TaskPriority;
   versionStatus: TaskVersionStatus;
+  instructionPatient: string;
+  instructionClinician: string;
+  timingOffsetDays?: number;
+  timingDurationDays?: number;
+  timingTimeOfDay?: string;
+  timingIsFlexible?: boolean;
+  conditions?: Record<string, any>;
+  evidenceSource?: string;
+  evidenceUrl?: string;
+  evidenceLevel?: string;
+  evidencePublicationDate?: string;
+  evidenceNotes?: string;
   version: string;
-  isTemplate: boolean;
+  isActive?: boolean;
+  isTemplate?: boolean;
+  isValid?: boolean;
+  metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,7 +97,7 @@ export interface TaskValidationError {
   field: string;
   message: string;
   code: string;
-  severity: 'error' | 'warning';
+  severity: "error" | "warning";
 }
 
 export interface TaskValidationResult {

@@ -30,7 +30,6 @@ import {
   pgTable,
   text,
   timestamp,
-  uuid,
 } from "drizzle-orm/pg-core";
 import { organization } from "./organization";
 import { team } from "./team";
@@ -106,7 +105,7 @@ export const carePlanCategory: any = pgTable(
     pathIdx: index("care_plan_category_path_idx").on(table.path),
     orgIdx: index("care_plan_category_org_idx").on(table.organizationId),
     parentIdx: index("care_plan_category_parent_idx").on(table.parentId),
-  })
+  }),
 );
 
 /**
@@ -125,12 +124,23 @@ export const carePlan: any = pgTable(
     categoryId: text("category_id").references(() => carePlanCategory.id, {
       onDelete: "set null",
     }),
-    organizationId: text("organization_id")
-      .notNull()
-      .references(() => organization.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "cascade",
+    }), // Made nullable for system plans
     teamId: text("team_id").references(() => team.id, {
       onDelete: "set null",
     }),
+    // New plan level fields
+    planLevel: text("plan_level").notNull().default("personal"), // 'system', 'organization', 'team', 'personal'
+    copiedFrom: text("copied_from").references((): any => carePlan.id, {
+      onDelete: "set null",
+    }),
+    originalPlanId: text("original_plan_id").references(
+      (): any => carePlan.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     currentVersionId: text("current_version_id"), // References latest version
     versionNumber: integer("version_number").notNull().default(1),
     isTemplate: boolean("is_template").notNull().default(false),
@@ -161,7 +171,7 @@ export const carePlan: any = pgTable(
     teamIdx: index("care_plan_team_idx").on(table.teamId),
     templateIdx: index("care_plan_template_idx").on(table.templateId),
     searchIdx: index("care_plan_search_idx").on(table.searchVector),
-  })
+  }),
 );
 
 /**
@@ -193,10 +203,10 @@ export const carePlanVersion = pgTable(
   (table) => ({
     planVersionIdx: index("care_plan_version_plan_idx").on(
       table.carePlanId,
-      table.versionNumber
+      table.versionNumber,
     ),
     createdAtIdx: index("care_plan_version_created_idx").on(table.createdAt),
-  })
+  }),
 );
 
 /**
@@ -232,13 +242,13 @@ export const carePlanPermission = pgTable(
     planEntityIdx: index("care_plan_permission_plan_entity_idx").on(
       table.carePlanId,
       table.entityType,
-      table.entityId
+      table.entityId,
     ),
     entityIdx: index("care_plan_permission_entity_idx").on(
       table.entityType,
-      table.entityId
+      table.entityId,
     ),
-  })
+  }),
 );
 
 /**
@@ -267,7 +277,7 @@ export const carePlanTag = pgTable(
     planTagIdx: index("care_plan_tag_plan_idx").on(table.carePlanId),
     tagIdx: index("care_plan_tag_tag_idx").on(table.tag),
     categoryIdx: index("care_plan_tag_category_idx").on(table.category),
-  })
+  }),
 );
 
 /**
@@ -301,13 +311,13 @@ export const carePlanMetadata = pgTable(
   (table) => ({
     planFieldIdx: index("care_plan_metadata_plan_field_idx").on(
       table.carePlanId,
-      table.fieldName
+      table.fieldName,
     ),
     fieldNameIdx: index("care_plan_metadata_field_idx").on(table.fieldName),
     searchableIdx: index("care_plan_metadata_searchable_idx").on(
-      table.isSearchable
+      table.isSearchable,
     ),
-  })
+  }),
 );
 
 /**
@@ -337,15 +347,15 @@ export const carePlanRelationship = pgTable(
   },
   (table) => ({
     sourceIdx: index("care_plan_relationship_source_idx").on(
-      table.sourceCarePlanId
+      table.sourceCarePlanId,
     ),
     targetIdx: index("care_plan_relationship_target_idx").on(
-      table.targetCarePlanId
+      table.targetCarePlanId,
     ),
     typeIdx: index("care_plan_relationship_type_idx").on(
-      table.relationshipType
+      table.relationshipType,
     ),
-  })
+  }),
 );
 
 /**
@@ -384,9 +394,42 @@ export const carePlanAuditLog = pgTable(
     createdAtIdx: index("care_plan_audit_created_idx").on(table.createdAt),
     entityIdx: index("care_plan_audit_entity_idx").on(
       table.entityType,
-      table.entityId
+      table.entityId,
     ),
-  })
+  }),
+);
+
+/**
+ * Fine-grained access control for care plans beyond organization/team membership.
+ */
+export const carePlanAccess = pgTable(
+  "care_plan_access",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`uuid_generate_v7()`),
+    carePlanId: text("care_plan_id")
+      .notNull()
+      .references(() => carePlan.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessLevel: text("access_level").notNull().default("read"), // 'read', 'write', 'admin'
+    grantedBy: text("granted_by").references(() => user.id),
+    grantedAt: timestamp("granted_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }),
+  },
+  (table) => ({
+    planUserIdx: index("care_plan_access_plan_user_idx").on(
+      table.carePlanId,
+      table.userId,
+    ),
+    userIdx: index("care_plan_access_user_idx").on(table.userId),
+    planIdx: index("care_plan_access_plan_idx").on(table.carePlanId),
+    levelIdx: index("care_plan_access_level_idx").on(table.accessLevel),
+  }),
 );
 
 // —————————————————————————————————————————————————————————————————————————————
@@ -413,7 +456,7 @@ export const carePlanCategoryRelations = relations(
       references: [user.id],
     }),
     carePlans: many(carePlan),
-  })
+  }),
 );
 
 export const carePlanRelations = relations(carePlan, ({ one, many }) => ({
@@ -475,7 +518,7 @@ export const carePlanVersionRelations = relations(
       fields: [carePlanVersion.createdBy],
       references: [user.id],
     }),
-  })
+  }),
 );
 
 export const carePlanPermissionRelations = relations(
@@ -489,7 +532,7 @@ export const carePlanPermissionRelations = relations(
       fields: [carePlanPermission.grantedBy],
       references: [user.id],
     }),
-  })
+  }),
 );
 
 export const carePlanTagRelations = relations(carePlanTag, ({ one }) => ({
@@ -514,7 +557,7 @@ export const carePlanMetadataRelations = relations(
       fields: [carePlanMetadata.createdBy],
       references: [user.id],
     }),
-  })
+  }),
 );
 
 export const carePlanRelationshipRelations = relations(
@@ -534,7 +577,7 @@ export const carePlanRelationshipRelations = relations(
       fields: [carePlanRelationship.createdBy],
       references: [user.id],
     }),
-  })
+  }),
 );
 
 export const carePlanAuditLogRelations = relations(
@@ -548,5 +591,21 @@ export const carePlanAuditLogRelations = relations(
       fields: [carePlanAuditLog.userId],
       references: [user.id],
     }),
-  })
+  }),
 );
+
+export const carePlanAccessRelations = relations(carePlanAccess, ({ one }) => ({
+  carePlan: one(carePlan, {
+    fields: [carePlanAccess.carePlanId],
+    references: [carePlan.id],
+  }),
+  user: one(user, {
+    fields: [carePlanAccess.userId],
+    references: [user.id],
+  }),
+  grantedByUser: one(user, {
+    fields: [carePlanAccess.grantedBy],
+    references: [user.id],
+    relationName: "grantedBy",
+  }),
+}));
