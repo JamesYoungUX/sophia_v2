@@ -17,6 +17,7 @@ import {
   NavDocumentation,
   NavMain,
   NavManagement,
+  NavSource,
 } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -106,29 +107,6 @@ const data = {
   ],
   navManagement: [
     {
-      title: "Documentation",
-      url: "#",
-      icon: FileText,
-      items: [
-        {
-          title: "Medical Records",
-          url: "/medical-records",
-        },
-        {
-          title: "Treatment Plans",
-          url: "/treatment-plans",
-        },
-        {
-          title: "Lab Results",
-          url: "/lab-results",
-        },
-        {
-          title: "Prescriptions",
-          url: "/prescriptions",
-        },
-      ],
-    },
-    {
       title: "Settings",
       url: "#",
       icon: Settings2,
@@ -148,6 +126,43 @@ const data = {
         {
           title: "About",
           url: "/about",
+        },
+        {
+          title: "Genesis Settings",
+          url: "/genesis-settings",
+        },
+      ],
+    },
+  ],
+  navSource: [
+    {
+      title: "Genesis Findings",
+      url: "#",
+      icon: FileText,
+      items: [
+        {
+          title: "Aug 2024",
+          url: "/genesis-findings/2024-08",
+        },
+        {
+          title: "Jul 2024", 
+          url: "/genesis-findings/2024-07",
+        },
+        {
+          title: "Jun 2024",
+          url: "/genesis-findings/2024-06",
+        },
+        {
+          title: "May 2024",
+          url: "/genesis-findings/2024-05",
+        },
+        {
+          title: "Apr 2024",
+          url: "/genesis-findings/2024-04",
+        },
+        {
+          title: "Mar 2024",
+          url: "/genesis-findings/2024-03",
         },
       ],
     },
@@ -228,6 +243,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavManagement items={data.navManagement} />
+        <NavSource items={data.navSource} />
         <NavDocumentation items={data.navDocumentation} />
         <NavProjects projects={data.projects} />
       </SidebarContent>

@@ -16,6 +16,7 @@ import { Route as PatientPoolRouteImport } from './../routes/patient-pool'
 import { Route as OrganizationRouteImport } from './../routes/organization'
 import { Route as MyPlansRouteImport } from './../routes/my-plans'
 import { Route as LoginRouteImport } from './../routes/login'
+import { Route as GenesisSettingsRouteImport } from './../routes/genesis-settings'
 import { Route as CarePlansRouteImport } from './../routes/care-plans'
 import { Route as CareExceptionsRouteImport } from './../routes/care-exceptions'
 import { Route as AccountRouteImport } from './../routes/account'
@@ -28,6 +29,7 @@ import { Route as TaskManagementTaskIdRouteImport } from './../routes/task-manag
 import { Route as PrdsSurgicalPlanRouteImport } from './../routes/prds.surgical-plan'
 import { Route as PrdsSophiaPatientEngagementRouteImport } from './../routes/prds.sophia-patient-engagement'
 import { Route as PrdsGenesisAgentRouteImport } from './../routes/prds.genesis-agent'
+import { Route as GenesisFindingsMonthRouteImport } from './../routes/genesis-findings.$month'
 import { Route as CareExceptionsIdRouteImport } from './../routes/care-exceptions/$id'
 import { Route as AgentsQuantumAgentRouteImport } from './../routes/agents.quantum-agent'
 import { Route as AgentsPatientEngagementRouteImport } from './../routes/agents.patient-engagement'
@@ -67,6 +69,11 @@ const MyPlansRoute = MyPlansRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenesisSettingsRoute = GenesisSettingsRouteImport.update({
+  id: '/genesis-settings',
+  path: '/genesis-settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CarePlansRoute = CarePlansRouteImport.update({
@@ -131,6 +138,11 @@ const PrdsGenesisAgentRoute = PrdsGenesisAgentRouteImport.update({
   path: '/prds/genesis-agent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GenesisFindingsMonthRoute = GenesisFindingsMonthRouteImport.update({
+  id: '/genesis-findings/$month',
+  path: '/genesis-findings/$month',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CareExceptionsIdRoute = CareExceptionsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -163,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/care-exceptions': typeof CareExceptionsRouteWithChildren
   '/care-plans': typeof CarePlansRoute
+  '/genesis-settings': typeof GenesisSettingsRoute
   '/login': typeof LoginRoute
   '/my-plans': typeof MyPlansRoute
   '/organization': typeof OrganizationRoute
@@ -175,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
   '/care-exceptions/$id': typeof CareExceptionsIdRoute
+  '/genesis-findings/$month': typeof GenesisFindingsMonthRoute
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
@@ -189,6 +203,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/care-exceptions': typeof CareExceptionsRouteWithChildren
   '/care-plans': typeof CarePlansRoute
+  '/genesis-settings': typeof GenesisSettingsRoute
   '/login': typeof LoginRoute
   '/my-plans': typeof MyPlansRoute
   '/organization': typeof OrganizationRoute
@@ -200,6 +215,7 @@ export interface FileRoutesByTo {
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
   '/care-exceptions/$id': typeof CareExceptionsIdRoute
+  '/genesis-findings/$month': typeof GenesisFindingsMonthRoute
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
@@ -215,6 +231,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/care-exceptions': typeof CareExceptionsRouteWithChildren
   '/care-plans': typeof CarePlansRoute
+  '/genesis-settings': typeof GenesisSettingsRoute
   '/login': typeof LoginRoute
   '/my-plans': typeof MyPlansRoute
   '/organization': typeof OrganizationRoute
@@ -227,6 +244,7 @@ export interface FileRoutesById {
   '/agents/patient-engagement': typeof AgentsPatientEngagementRoute
   '/agents/quantum-agent': typeof AgentsQuantumAgentRoute
   '/care-exceptions/$id': typeof CareExceptionsIdRoute
+  '/genesis-findings/$month': typeof GenesisFindingsMonthRoute
   '/prds/genesis-agent': typeof PrdsGenesisAgentRoute
   '/prds/sophia-patient-engagement': typeof PrdsSophiaPatientEngagementRoute
   '/prds/surgical-plan': typeof PrdsSurgicalPlanRoute
@@ -243,6 +261,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/care-exceptions'
     | '/care-plans'
+    | '/genesis-settings'
     | '/login'
     | '/my-plans'
     | '/organization'
@@ -255,6 +274,7 @@ export interface FileRouteTypes {
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
     | '/care-exceptions/$id'
+    | '/genesis-findings/$month'
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
@@ -269,6 +289,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/care-exceptions'
     | '/care-plans'
+    | '/genesis-settings'
     | '/login'
     | '/my-plans'
     | '/organization'
@@ -280,6 +301,7 @@ export interface FileRouteTypes {
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
     | '/care-exceptions/$id'
+    | '/genesis-findings/$month'
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
@@ -294,6 +316,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/care-exceptions'
     | '/care-plans'
+    | '/genesis-settings'
     | '/login'
     | '/my-plans'
     | '/organization'
@@ -306,6 +329,7 @@ export interface FileRouteTypes {
     | '/agents/patient-engagement'
     | '/agents/quantum-agent'
     | '/care-exceptions/$id'
+    | '/genesis-findings/$month'
     | '/prds/genesis-agent'
     | '/prds/sophia-patient-engagement'
     | '/prds/surgical-plan'
@@ -321,6 +345,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   CareExceptionsRoute: typeof CareExceptionsRouteWithChildren
   CarePlansRoute: typeof CarePlansRoute
+  GenesisSettingsRoute: typeof GenesisSettingsRoute
   LoginRoute: typeof LoginRoute
   MyPlansRoute: typeof MyPlansRoute
   OrganizationRoute: typeof OrganizationRoute
@@ -332,6 +357,7 @@ export interface RootRouteChildren {
   AgentsGenesisAgentRoute: typeof AgentsGenesisAgentRoute
   AgentsPatientEngagementRoute: typeof AgentsPatientEngagementRoute
   AgentsQuantumAgentRoute: typeof AgentsQuantumAgentRoute
+  GenesisFindingsMonthRoute: typeof GenesisFindingsMonthRoute
   PrdsGenesisAgentRoute: typeof PrdsGenesisAgentRoute
   PrdsSophiaPatientEngagementRoute: typeof PrdsSophiaPatientEngagementRoute
   PrdsSurgicalPlanRoute: typeof PrdsSurgicalPlanRoute
@@ -386,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/genesis-settings': {
+      id: '/genesis-settings'
+      path: '/genesis-settings'
+      fullPath: '/genesis-settings'
+      preLoaderRoute: typeof GenesisSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/care-plans': {
@@ -472,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrdsGenesisAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/genesis-findings/$month': {
+      id: '/genesis-findings/$month'
+      path: '/genesis-findings/$month'
+      fullPath: '/genesis-findings/$month'
+      preLoaderRoute: typeof GenesisFindingsMonthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/care-exceptions/$id': {
       id: '/care-exceptions/$id'
       path: '/$id'
@@ -546,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   CareExceptionsRoute: CareExceptionsRouteWithChildren,
   CarePlansRoute: CarePlansRoute,
+  GenesisSettingsRoute: GenesisSettingsRoute,
   LoginRoute: LoginRoute,
   MyPlansRoute: MyPlansRoute,
   OrganizationRoute: OrganizationRoute,
@@ -557,6 +598,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsGenesisAgentRoute: AgentsGenesisAgentRoute,
   AgentsPatientEngagementRoute: AgentsPatientEngagementRoute,
   AgentsQuantumAgentRoute: AgentsQuantumAgentRoute,
+  GenesisFindingsMonthRoute: GenesisFindingsMonthRoute,
   PrdsGenesisAgentRoute: PrdsGenesisAgentRoute,
   PrdsSophiaPatientEngagementRoute: PrdsSophiaPatientEngagementRoute,
   PrdsSurgicalPlanRoute: PrdsSurgicalPlanRoute,

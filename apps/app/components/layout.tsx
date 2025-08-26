@@ -157,6 +157,41 @@ const routeToBreadcrumb: Record<
     group: "Console",
     page: "Task Management",
   },
+  "/genesis-settings": {
+    section: "Platform",
+    group: "Settings",
+    page: "Genesis Settings",
+  },
+  "/genesis-findings/2024-08": {
+    section: "Source",
+    group: "Genesis Findings",
+    page: "August 2024",
+  },
+  "/genesis-findings/2024-07": {
+    section: "Source",
+    group: "Genesis Findings",
+    page: "July 2024",
+  },
+  "/genesis-findings/2024-06": {
+    section: "Source",
+    group: "Genesis Findings",
+    page: "June 2024",
+  },
+  "/genesis-findings/2024-05": {
+    section: "Source",
+    group: "Genesis Findings",
+    page: "May 2024",
+  },
+  "/genesis-findings/2024-04": {
+    section: "Source",
+    group: "Genesis Findings",
+    page: "April 2024",
+  },
+  "/genesis-findings/2024-03": {
+    section: "Source",
+    group: "Genesis Findings",
+    page: "March 2024",
+  },
 };
 
 export function Layout() {

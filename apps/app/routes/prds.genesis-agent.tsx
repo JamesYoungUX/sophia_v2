@@ -11,7 +11,7 @@ function GenesisAgentPRD() {
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Genesis Agent - Evidence-Based Care Plan Optimization</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Genesis Agent - Evidence-Based Care Plan Optimization</h1>
         <p className="text-muted-foreground">
           Product Requirements Document
         </p>

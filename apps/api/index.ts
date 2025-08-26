@@ -15,6 +15,7 @@ import type { AppContext } from "./lib/context.js";
 import { router } from "./lib/trpc.js";
 import { careExceptionRouter } from "./routers/care-exception.js";
 import { carePlanRouter } from "./routers/care-plan.js";
+import { genesisAgentRouter } from "./routers/genesis-agent.js";
 import { organizationRouter } from "./routers/organization.js";
 import { patientRouter } from "./routers/patient.js";
 import { taskRouter } from "./routers/task.js";
@@ -28,6 +29,7 @@ if (DEBUG_LOG) {
     const ptPre = Object.keys((patientRouter as any)?._def?.record ?? {});
     const orgPre = Object.keys((organizationRouter as any)?._def?.record ?? {});
     const userPre = Object.keys((userRouter as any)?._def?.record ?? {});
+    const genesisPre = Object.keys((genesisAgentRouter as any)?._def?.record ?? {});
     console.log(
       "[DEBUG] PRE appRouter compose - careExceptionRouter keys:",
       cePre,
@@ -38,6 +40,7 @@ if (DEBUG_LOG) {
       orgPre,
     );
     console.log("[DEBUG] PRE appRouter compose - userRouter keys:", userPre);
+    console.log("[DEBUG] PRE appRouter compose - genesisAgentRouter keys:", genesisPre);
   } catch (e) {
     console.log(
       "[DEBUG] PRE appRouter compose: error while reading child keys",
@@ -54,6 +57,7 @@ const appRouter = router({
   careException: careExceptionRouter,
   carePlan: carePlanRouter,
   task: taskRouter,
+  genesisAgent: genesisAgentRouter,
   // TEMP: alias to test routing under alternate key
   careExceptions: careExceptionRouter,
 });
@@ -85,6 +89,10 @@ if (DEBUG_LOG) {
     readChildKeys(
       "careException",
       (appRouter as any)?._def?.record?.careException,
+    );
+    readChildKeys(
+      "genesisAgent",
+      (appRouter as any)?._def?.record?.genesisAgent,
     );
     readChildKeys(
       "careExceptions (alias)",

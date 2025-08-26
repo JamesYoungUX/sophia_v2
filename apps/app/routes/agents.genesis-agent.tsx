@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuth } from "@/lib/auth-guard";
+import { Link } from "@tanstack/react-router";
 
 const currentPlans = [
   {
@@ -59,16 +60,64 @@ const auditLog = [
   },
 ];
 
-export const Route = createFileRoute("/agents/genesis-agent")({
-  beforeLoad: requireAuth,
-  component: () => (
+// Back to documentation/demo page - actual functionality moved to Genesis Settings
+function GenesisAgentPage() {
+  return (
     <div className="flex flex-1 flex-col gap-4 p-4 2xl:p-8 3xl:p-12 4xl:p-16 w-full">
       <h1 className="text-3xl font-bold mb-4">Genesis Agent</h1>
       <p className="mb-6 text-muted-foreground">
-        <strong>Genesis Agent</strong> assists clinicians by suggesting
-        evidence-based care plan updates, learning from new guidelines and
-        research, and always requiring human review before any plan is changed.
+        <strong>Genesis Agent</strong> continuously monitors medical literature from multiple authoritative sources,
+        analyzes evidence quality, and suggests evidence-based care plan updates. All recommendations require 
+        human review and follow a two-tier approval process: Sophia CMO approval followed by organization-level review.
       </p>
+      
+      {/* Quick Links */}
+      <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h3 className="font-semibold mb-2 text-sm">Quick Links</h3>
+        <div className="flex gap-4 text-sm">
+          <Link to="/genesis-settings" className="text-blue-600 hover:underline">
+            ⚙️ Genesis Settings
+          </Link>
+          <Link to="/genesis-findings" className="text-blue-600 hover:underline">
+            📊 View Findings
+          </Link>
+          <a href="/docs/genesis-agent-automation" className="text-blue-600 hover:underline" target="_blank">
+            📚 Technical Documentation
+          </a>
+        </div>
+      </div>
+      
+      {/* Literature Sources Overview */}
+      <div className="mb-6 p-4 bg-slate-50 rounded-lg border">
+        <h3 className="font-semibold mb-3 text-sm">📚 Literature Sources & Capabilities</h3>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+          <div className="text-center">
+            <div className="w-8 h-8 mx-auto mb-1 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center font-medium">📄</div>
+            <div className="font-medium">PubMed</div>
+            <div className="text-muted-foreground">Research Papers</div>
+          </div>
+          <div className="text-center">
+            <div className="w-8 h-8 mx-auto mb-1 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center font-medium">📊</div>
+            <div className="font-medium">Cochrane</div>
+            <div className="text-muted-foreground">Systematic Reviews</div>
+          </div>
+          <div className="text-center">
+            <div className="w-8 h-8 mx-auto mb-1 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center font-medium">📋</div>
+            <div className="font-medium">Guidelines</div>
+            <div className="text-muted-foreground">NICE, AHA, CDC</div>
+          </div>
+          <div className="text-center">
+            <div className="w-8 h-8 mx-auto mb-1 bg-cyan-100 text-cyan-800 rounded-full flex items-center justify-center font-medium">🧪</div>
+            <div className="font-medium">Clinical Trials</div>
+            <div className="text-muted-foreground">Trial Data</div>
+          </div>
+          <div className="text-center">
+            <div className="w-8 h-8 mx-auto mb-1 bg-pink-100 text-pink-800 rounded-full flex items-center justify-center font-medium">🤖</div>
+            <div className="font-medium">AI Analysis</div>
+            <div className="text-muted-foreground">Evidence Synthesis</div>
+          </div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-xl font-semibold mb-2">Current Plans</h2>
@@ -142,6 +191,7 @@ export const Route = createFileRoute("/agents/genesis-agent")({
               </li>
             ))}
           </ul>
+          
           <h2 className="text-xl font-semibold mb-2">Audit Log</h2>
           <ul className="space-y-2">
             {auditLog.map((log, i) => (
@@ -171,8 +221,10 @@ export const Route = createFileRoute("/agents/genesis-agent")({
               outdated.
             </li>
             <li>Suggests update to &lt;130/80 mmHg, citing the guideline.</li>
-            <li>Clinician reviews and accepts the suggestion.</li>
-            <li>Plan is updated and audit log is recorded.</li>
+            <li>CMO reviews and approves the suggestion at Sophia level.</li>
+            <li>Organizations receive notification and review for their populations.</li>
+            <li>Each org accepts/rejects based on their patient needs.</li>
+            <li>Audit log records all decisions with reasons.</li>
           </ol>
           <h3 className="font-semibold mb-2">Genesis Agent Flow</h3>
           <div className="max-w-4xl">
@@ -270,5 +322,10 @@ export const Route = createFileRoute("/agents/genesis-agent")({
         </div>
       </div>
     </div>
-  ),
+  );
+}
+
+export const Route = createFileRoute("/agents/genesis-agent")({
+  beforeLoad: requireAuth,
+  component: GenesisAgentPage,
 });

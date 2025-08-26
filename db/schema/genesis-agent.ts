@@ -420,6 +420,143 @@ export const genesisCarePlanKeywords = pgTable(
 /**
  * Comprehensive audit trail for all Genesis agent activities.
  */
+/**
+ * Monthly Genesis Findings aggregations.
+ * Stores monthly findings summaries for the Genesis Agent dashboard.
+ */
+export const genesisMonthlyFindings = pgTable(
+  "genesis_monthly_findings",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`uuid_generate_v7()`),
+
+    // Time period
+    year: integer("year").notNull(),
+    month: integer("month").notNull(), // 1-12
+    monthKey: text("month_key").notNull(), // YYYY-MM format
+
+    // Care plan context
+    carePlanId: text("care_plan_id")
+      .notNull()
+      .references(() => carePlan.id, { onDelete: "cascade" }),
+    carePlanTitle: text("care_plan_title").notNull(),
+
+    // Finding details
+    findingId: text("finding_id").notNull(), // Unique identifier for this finding
+    title: text("title").notNull(),
+    source: text("source").notNull(),
+    sourceType: text("source_type").notNull(), // research, systematic-review, guidelines, clinical-trial, ai-synthesis
+    date: text("date").notNull(), // Publication/discovery date
+    evidenceGrade: text("evidence_grade").notNull(), // A, B, C, D
+    relevanceScore: real("relevance_score").notNull(), // 0-1
+    summary: text("summary").notNull(),
+    url: text("url"),
+    
+    // Status and workflow
+    status: text("status").notNull(), // pending_cmo_review, cmo_approved, org_review, critical_review, implemented, rejected
+    critical: boolean("critical").notNull().default(false),
+    
+    // CMO Review
+    cmoReviewedAt: timestamp("cmo_reviewed_at", { withTimezone: true, mode: "date" }),
+    cmoReviewerId: text("cmo_reviewer_id").references(() => user.id),
+    cmoComments: text("cmo_comments"),
+    cmoDecision: text("cmo_decision"), // approved, rejected, needs_more_info
+
+    // Organization Review (after CMO approval)
+    orgReviewedAt: timestamp("org_reviewed_at", { withTimezone: true, mode: "date" }),
+    orgReviewerId: text("org_reviewer_id").references(() => user.id),
+    orgComments: text("org_comments"),
+    orgDecision: text("org_decision"), // approved, rejected, implemented
+
+    // Organization context
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    monthKeyIdx: index("genesis_findings_month_key_idx").on(table.monthKey),
+    carePlanIdx: index("genesis_findings_care_plan_idx").on(table.carePlanId),
+    statusIdx: index("genesis_findings_status_idx").on(table.status),
+    criticalIdx: index("genesis_findings_critical_idx").on(table.critical),
+    orgIdx: index("genesis_findings_org_idx").on(table.organizationId),
+    yearMonthIdx: index("genesis_findings_year_month_idx").on(table.year, table.month),
+    cmoReviewIdx: index("genesis_findings_cmo_review_idx").on(table.cmoReviewerId),
+    orgReviewIdx: index("genesis_findings_org_review_idx").on(table.orgReviewerId),
+  }),
+);
+
+/**
+ * Genesis Agent care plan monitoring configuration.
+ * Stores per-care-plan monitoring settings as requested by user.
+ */
+export const genesisCarePlanConfig = pgTable(
+  "genesis_care_plan_config",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`uuid_generate_v7()`),
+
+    // Care plan reference
+    carePlanId: text("care_plan_id")
+      .notNull()
+      .references(() => carePlan.id, { onDelete: "cascade" }),
+
+    // Monitoring configuration  
+    updateFrequency: text("update_frequency").notNull().default("monthly"), // weekly, bi-weekly, monthly, quarterly
+    monitoring: text("monitoring").notNull().default("active"), // active, paused
+    lastChecked: timestamp("last_checked", { withTimezone: true, mode: "date" }),
+    nextCheck: timestamp("next_check", { withTimezone: true, mode: "date" }),
+
+    // Literature sources configuration
+    pubmedEnabled: boolean("pubmed_enabled").notNull().default(true),
+    cochraneEnabled: boolean("cochrane_enabled").notNull().default(true),
+    guidelinesEnabled: boolean("guidelines_enabled").notNull().default(true),
+    clinicalTrialsEnabled: boolean("clinical_trials_enabled").notNull().default(true),
+
+    // Notification configuration
+    notifyCmo: boolean("notify_cmo").notNull().default(true),
+    notifyClinicalDirectors: boolean("notify_clinical_directors").notNull().default(false),
+    notifyCarePlanOwners: boolean("notify_care_plan_owners").notNull().default(false),
+
+    // Findings summary
+    totalFindings: integer("total_findings").notNull().default(0),
+
+    // Organization context
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id),
+  },
+  (table) => ({
+    carePlanIdx: index("genesis_config_care_plan_idx").on(table.carePlanId),
+    monitoringIdx: index("genesis_config_monitoring_idx").on(table.monitoring),
+    frequencyIdx: index("genesis_config_frequency_idx").on(table.updateFrequency),
+    orgIdx: index("genesis_config_org_idx").on(table.organizationId),
+    nextCheckIdx: index("genesis_config_next_check_idx").on(table.nextCheck),
+  }),
+);
+
 export const genesisAuditLog = pgTable(
   "genesis_audit_log",
   {
@@ -562,6 +699,48 @@ export const genesisCarePlanKeywordsRelations = relations(
     }),
     createdByUser: one(user, {
       fields: [genesisCarePlanKeywords.createdBy],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const genesisMonthlyFindingsRelations = relations(
+  genesisMonthlyFindings,
+  ({ one }) => ({
+    carePlan: one(carePlan, {
+      fields: [genesisMonthlyFindings.carePlanId],
+      references: [carePlan.id],
+    }),
+    organization: one(organization, {
+      fields: [genesisMonthlyFindings.organizationId],
+      references: [organization.id],
+    }),
+    cmoReviewer: one(user, {
+      fields: [genesisMonthlyFindings.cmoReviewerId],
+      references: [user.id],
+      relationName: "cmoReviewer",
+    }),
+    orgReviewer: one(user, {
+      fields: [genesisMonthlyFindings.orgReviewerId],
+      references: [user.id],
+      relationName: "orgReviewer",
+    }),
+  }),
+);
+
+export const genesisCarePlanConfigRelations = relations(
+  genesisCarePlanConfig,
+  ({ one }) => ({
+    carePlan: one(carePlan, {
+      fields: [genesisCarePlanConfig.carePlanId],
+      references: [carePlan.id],
+    }),
+    organization: one(organization, {
+      fields: [genesisCarePlanConfig.organizationId],
+      references: [organization.id],
+    }),
+    createdByUser: one(user, {
+      fields: [genesisCarePlanConfig.createdBy],
       references: [user.id],
     }),
   }),
